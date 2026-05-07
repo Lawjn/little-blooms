@@ -29,7 +29,11 @@ import {
   WEATHER,
 } from '@/features/mood/data';
 import { useMoodEntry, useSaveMoodEntry } from '@/features/mood/hooks';
+import { SaveSuccessSheet } from '@/features/mood/components/SaveSuccessSheet';
+import { getRandomQuote } from '@/features/mood/quotes';
 import { getMoodPhotoSignedUrls, uploadMoodPhoto } from '@/features/mood/upload';
+import { useInventory } from '@/features/inventory/hooks';
+import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 import type { MoodLevel } from '@/lib/theme';
 
@@ -42,8 +46,15 @@ export default function HomeScreen() {
 
   const entryQuery = useMoodEntry({ userId: user?.id, date: activeDate });
   const saveMutation = useSaveMoodEntry();
+  const inventoryQuery = useInventory(user?.id);
+  const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
 
   const isFutureDate = isAfter(startOfDay(parseISO(activeDate)), startOfDay(new Date()));
+
+  // Success sheet state
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successQuote, setSuccessQuote] = useState('');
+  const [successIsUpdate, setSuccessIsUpdate] = useState(false);
 
   // Form state
   const [moodLevel, setMoodLevel] = useState<MoodLevel | null>(null);
@@ -145,6 +156,7 @@ export default function HomeScreen() {
       const photoPaths = uploadResults.filter((p): p is string => p !== null);
 
       // 2) Upsert mood_entry với photo_urls
+      const wasExisting = !!entryQuery.data;
       await saveMutation.mutateAsync({
         userId: user.id,
         input: {
@@ -160,7 +172,10 @@ export default function HomeScreen() {
           photo_urls: photoPaths,
         },
       });
-      Alert.alert('Đã lưu 🌱', 'Cây hoa của ngày hôm nay đã sẵn sàng cho vườn của bạn.');
+      // Show success sheet thay vì Alert — engagement loop
+      setSuccessQuote(getRandomQuote());
+      setSuccessIsUpdate(wasExisting);
+      setSuccessVisible(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lưu thất bại';
       Alert.alert('Lỗi lưu entry', msg);
@@ -245,6 +260,20 @@ export default function HomeScreen() {
           <SectionCard title="Today's photo">
             <PhotoPicker photos={photos} onChange={setPhotos} />
           </SectionCard>
+
+          {/* Success sheet */}
+          <SaveSuccessSheet
+            visible={successVisible}
+            onDismiss={() => setSuccessVisible(false)}
+            onViewGarden={() => {
+              setSuccessVisible(false);
+              router.push('/garden' as never);
+            }}
+            plantType={activePlant}
+            moodLevel={moodLevel}
+            isUpdate={successIsUpdate}
+            quote={successQuote}
+          />
 
           {isFutureDate ? (
             <View style={styles.futureNotice}>
