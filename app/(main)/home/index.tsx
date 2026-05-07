@@ -157,6 +157,8 @@ export default function HomeScreen() {
       return;
     }
 
+    console.warn('[onSave] saving with entry_date:', activeDate, 'dateParam:', dateParam);
+
     try {
       // Parallel photo upload
       const uploadTasks = photos.map(async (slot, i) => {
