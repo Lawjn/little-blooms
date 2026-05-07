@@ -122,6 +122,33 @@
 
 ---
 
+## ADR-011: UI Polish Backlog (Phase 9)
+
+**Date**: 2026-05-07
+**Status**: Backlog
+**Context**: Khi build từng feature, có những UI/UX "tạm chấp nhận" mà user note lại để polish sau khi feature core ready. Tránh polish premature mà miss feedback.
+
+**Items**:
+
+1. **Quick pulse pill ở Home wizard** (commit `ef8ca1d`):
+   - Hiện: pill cam right-aligned dưới progress dots, "Or quick pulse"
+   - User note: "tạm chấp nhận, làm đẹp sau"
+   - Polish ideas: thử placement khác (footer-area, floating bottom-right above wizard footer), animation pulse subtle, copy hay hơn ("Tap quick mood" / "Skip to pulse")
+
+2. **Garden empty cells decorations** — chưa implement (user pending decision):
+   - Current: empty cells trống trơn (chỉ green tile)
+   - Proposed: random nature emoji decorations 🌿🍄🐝🦋, opacity 0.4-0.5
+   - Plus tap-to-log-retro for past day no-entry cells
+   - User chưa quyết approach (hint Hướng 2 — decorations + tap retro), defer
+
+3. **Wizard step transitions** — đã polish 1 lần (fade 280ms + haptic + 900ms delay), có thể iterate thêm slide/scale animations Phase 9.
+
+4. **Garden visual** (ADR-009 isometric defer Phase 9): isometric grid + SVG flowers + animations gom 1 lần.
+
+**Implementation timing**: Phase 9 polish, sau khi user verify core flows ổn định.
+
+---
+
 ## ADR-009: Special Day Icon (feature backlog)
 
 **Date**: 2026-05-06

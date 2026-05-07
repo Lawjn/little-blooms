@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { ActionSheetIOS, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { CameraCapture, type CapturedAsset } from '@/components/CameraCapture';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 
 export interface PhotoSlot {
@@ -26,6 +28,22 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
   const slots: (PhotoSlot | null)[] = [...photos];
   while (slots.length < maxPhotos) slots.push(null);
 
+  // Camera state — Locket-style fullscreen capture
+  const [cameraIndex, setCameraIndex] = useState<number | null>(null);
+  const cameraVisible = cameraIndex !== null;
+
+  const onCameraCaptured = (asset: CapturedAsset) => {
+    if (cameraIndex === null) return;
+    const next = [...slots];
+    next[cameraIndex] = {
+      uri: asset.uri,
+      pendingBase64: asset.base64,
+      pendingMime: asset.mimeType,
+    };
+    onChange(next);
+    setCameraIndex(null);
+  };
+
   const requestLibraryPerm = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -35,33 +53,9 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
     return true;
   };
 
-  const requestCameraPerm = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Cần quyền camera', 'Vào Settings → Little Blooms → Camera để cấp quyền.');
-      return false;
-    }
-    return true;
-  };
-
-  const handleCameraCapture = async (index: number) => {
-    const ok = await requestCameraPerm();
-    if (!ok) return;
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      allowsEditing: false,
-      quality: 0.5,
-      base64: true,
-    });
-    if (result.canceled) return;
-    const asset = result.assets[0];
-    const next = [...slots];
-    next[index] = {
-      uri: asset.uri,
-      pendingBase64: asset.base64,
-      pendingMime: asset.mimeType ?? 'image/jpeg',
-    };
-    onChange(next);
+  // Mở Locket-style fullscreen camera. Permission handled trong CameraCapture component.
+  const handleCameraCapture = (index: number) => {
+    setCameraIndex(index);
   };
 
   const handleLibraryPick = async (index: number) => {
@@ -114,6 +108,7 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
   };
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.row}>
         {slots.slice(0, maxPhotos).map((slot, idx) => (
@@ -148,6 +143,14 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
       </View>
       <Text style={styles.hint}>Select up to {maxPhotos} photos</Text>
     </View>
+
+    {/* Locket-style fullscreen camera */}
+    <CameraCapture
+      visible={cameraVisible}
+      onClose={() => setCameraIndex(null)}
+      onCapture={onCameraCaptured}
+    />
+    </>
   );
 }
 
