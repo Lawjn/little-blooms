@@ -341,6 +341,18 @@ export default function HomeScreen() {
       {/* Progress */}
       <StepProgress current={stepIndex} total={STEPS.length} />
 
+      {/* Quick pulse alternative — visible mọi step để user có thể bypass wizard */}
+      <View style={styles.quickPulseBar}>
+        <Pressable
+          onPress={() => setPulseModalVisible(true)}
+          hitSlop={6}
+          style={styles.quickPulsePill}
+        >
+          <Ionicons name="flash" size={12} color={colors.white} />
+          <Text style={styles.quickPulseText}>Or quick pulse</Text>
+        </Pressable>
+      </View>
+
       {/* Content — fade transition giữa các steps */}
       <Animated.View style={[styles.content, { opacity: stepFade }]}>
         {renderStep()}
@@ -450,6 +462,25 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  quickPulseBar: {
+    paddingHorizontal: spacing.lg,
+    alignItems: 'flex-end',
+    marginBottom: spacing.xs,
+  },
+  quickPulsePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FB8C00',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+  },
+  quickPulseText: {
+    fontFamily: typography.fontFamily.semibold,
+    fontSize: typography.sizes.xs,
+    color: colors.white,
   },
   footer: {
     flexDirection: 'row',
