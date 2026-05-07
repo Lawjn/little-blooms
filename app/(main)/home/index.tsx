@@ -18,10 +18,10 @@ import { MoodStep } from '@/features/mood/components/steps/MoodStep';
 import { NoteStep } from '@/features/mood/components/steps/NoteStep';
 import { PhotosStep } from '@/features/mood/components/steps/PhotosStep';
 import { useMoodEntry, useSaveMoodEntry } from '@/features/mood/hooks';
+import { DecisionScreen } from '@/features/mood/components/DecisionScreen';
 import { getRandomQuote } from '@/features/mood/quotes';
 import { getMoodPhotoSignedUrls, uploadMoodPhoto } from '@/features/mood/upload';
 import { QuickLogModal } from '@/features/pulse/components/QuickLogModal';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 import type { MoodLevel } from '@/lib/theme';
 
@@ -53,6 +53,10 @@ export default function HomeScreen() {
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
 
   const isFutureDate = isAfter(startOfDay(parseISO(activeDate)), startOfDay(new Date()));
+
+  // View mode: 'decision' nếu đã có main entry, 'wizard' nếu chưa
+  // null = chưa biết (đang load)
+  const [viewMode, setViewMode] = useState<'decision' | 'wizard' | null>(null);
 
   // Step state
   const [step, setStep] = useState<Step>('mood');
@@ -91,9 +95,10 @@ export default function HomeScreen() {
   // Pulse modal — pulse review move sang Garden info screen, Home chỉ có nút mở
   const [pulseModalVisible, setPulseModalVisible] = useState(false);
 
-  // Reset form khi date đổi
+  // Reset form + viewMode khi date đổi
   useEffect(() => {
     setHydrated(false);
+    setViewMode(null);
     setStep('mood');
     setMoodLevel(null);
     setEmotions([]);
@@ -106,14 +111,16 @@ export default function HomeScreen() {
     setPhotos([null, null, null]);
   }, [activeDate]);
 
-  // Prefill khi load entry cũ
+  // Prefill khi load entry cũ + set viewMode
   useEffect(() => {
     if (hydrated || entryQuery.isLoading) return;
     const data = entryQuery.data;
     if (!data) {
       setHydrated(true);
+      setViewMode('wizard'); // chưa có entry → wizard
       return;
     }
+    setViewMode('decision'); // đã có entry → decision screen mặc định
     setMoodLevel(data.mood_level);
     setEmotions(data.emotions);
     setHobbies(data.hobbies);
@@ -200,6 +207,8 @@ export default function HomeScreen() {
       setSuccessQuote(getRandomQuote());
       setSuccessIsUpdate(wasExisting);
       setSuccessVisible(true);
+      // Sau khi save xong → switch sang decision screen (entry now exists)
+      setViewMode('decision');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lưu thất bại';
       Alert.alert('Lỗi lưu entry', msg);
@@ -275,33 +284,59 @@ export default function HomeScreen() {
 
   const canSave = moodLevel !== null;
 
+  // isToday để control: pulse button + DecisionScreen action availability
+  const isToday = activeDate === format(new Date(), 'yyyy-MM-dd');
+
+  // Render header — common for cả decision và wizard mode
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Pressable
+        onPress={() => router.push('/home/calendar')}
+        hitSlop={8}
+        style={styles.headerLeft}
+      >
+        <Ionicons name="calendar-outline" size={22} color={colors.primary} />
+      </Pressable>
+      <Pressable
+        onPress={() => router.push('/home/calendar')}
+        style={styles.headerCenter}
+        hitSlop={8}
+      >
+        <Text style={styles.headerDate}>{dateLabel}</Text>
+        <Ionicons name="chevron-down" size={14} color={colors.primary} />
+      </Pressable>
+      <View style={styles.headerLeft} />
+    </View>
+  );
+
+  // Decision mode — đã có main entry
+  if (viewMode === 'decision' && entryQuery.data && user) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {renderHeader()}
+        <DecisionScreen
+          entry={entryQuery.data}
+          plantType={activePlant}
+          isToday={isToday}
+          userId={user.id}
+          date={activeDate}
+          onUpdate={() => setViewMode('wizard')}
+          onQuickPulse={() => setPulseModalVisible(true)}
+        />
+
+        {/* Quick log modal */}
+        <QuickLogModal
+          visible={pulseModalVisible}
+          onClose={() => setPulseModalVisible(false)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Wizard mode (default cho chưa có entry, hoặc user tap "Update reflection")
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.push('/home/calendar')}
-          hitSlop={8}
-          style={styles.headerLeft}
-        >
-          <Ionicons name="calendar-outline" size={22} color={colors.primary} />
-        </Pressable>
-        <Pressable
-          onPress={() => router.push('/home/calendar')}
-          style={styles.headerCenter}
-          hitSlop={8}
-        >
-          <Text style={styles.headerDate}>{dateLabel}</Text>
-          <Ionicons name="chevron-down" size={14} color={colors.primary} />
-        </Pressable>
-        <Pressable
-          onPress={() => setPulseModalVisible(true)}
-          hitSlop={8}
-          style={styles.pulseBtn}
-        >
-          <MaterialCommunityIcons name="plus" size={18} color={colors.white} />
-        </Pressable>
-      </View>
+      {renderHeader()}
 
       {/* Progress */}
       <StepProgress current={stepIndex} total={STEPS.length} />
@@ -412,14 +447,6 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: typography.sizes.md,
     color: colors.primary,
-  },
-  pulseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   content: {
     flex: 1,
