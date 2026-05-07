@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, isAfter, parseISO, startOfDay } from 'date-fns';
 import { Button } from '@/components/Button';
@@ -33,7 +34,9 @@ const STEP_HEADER: Record<Step, string> = {
   photos: 'Step 5 / 5',
 };
 
-const AUTO_ADVANCE_MS = 350;
+// Đủ time để user "feel" mood mình vừa pick + thấy label confirm trước khi chuyển step.
+// Quá ngắn → hụt hẫng. Quá dài → wait. 900ms là sweet spot.
+const AUTO_ADVANCE_MS = 900;
 
 export default function HomeScreen() {
   const user = useUser();
@@ -54,6 +57,17 @@ export default function HomeScreen() {
   const stepIndex = STEPS.indexOf(step);
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === STEPS.length - 1;
+
+  // Fade transition giữa steps — đỡ "cut hard" khi đổi
+  const stepFade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    stepFade.setValue(0);
+    Animated.timing(stepFade, {
+      toValue: 1,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [step, stepFade]);
 
   // Form state
   const [moodLevel, setMoodLevel] = useState<MoodLevel | null>(null);
@@ -126,7 +140,9 @@ export default function HomeScreen() {
 
   const handleMoodPick = (level: MoodLevel) => {
     setMoodLevel(level);
-    // Auto-advance sau pick mood (UX guided)
+    // Tactile feedback — user thấy/cảm được choice ngay (đỡ hụt hẫng)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    // Auto-advance sau ~900ms — đủ thời gian thấy label confirm + cảm xúc
     setTimeout(() => goNext(), AUTO_ADVANCE_MS);
   };
 
@@ -281,8 +297,10 @@ export default function HomeScreen() {
       {/* Progress */}
       <StepProgress current={stepIndex} total={STEPS.length} />
 
-      {/* Content */}
-      <View style={styles.content}>{renderStep()}</View>
+      {/* Content — fade transition giữa các steps */}
+      <Animated.View style={[styles.content, { opacity: stepFade }]}>
+        {renderStep()}
+      </Animated.View>
 
       {/* Footer */}
       <View style={styles.footer}>
