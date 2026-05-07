@@ -1,41 +1,39 @@
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, isAfter, parseISO, startOfDay } from 'date-fns';
 import { Button } from '@/components/Button';
-import { MoodPicker } from '@/components/MoodPicker';
-import { PhotoPicker, type PhotoSlot } from '@/components/PhotoPicker';
-import { SectionCard } from '@/components/SectionCard';
-import { TagGrid } from '@/components/TagGrid';
+import type { PhotoSlot } from '@/components/PhotoPicker';
 import { useUser } from '@/features/auth/store';
-import {
-  EMOTIONS,
-  HOBBIES,
-  MEALS,
-  OTHER_TAGS,
-  SELF_CARE,
-  WEATHER,
-} from '@/features/mood/data';
-import { useMoodEntry, useSaveMoodEntry } from '@/features/mood/hooks';
+import { DEFAULT_PLANT } from '@/features/garden/mapping';
+import { useInventory } from '@/features/inventory/hooks';
 import { SaveSuccessSheet } from '@/features/mood/components/SaveSuccessSheet';
+import { StepProgress } from '@/features/mood/components/StepProgress';
+import { ActivitiesStep } from '@/features/mood/components/steps/ActivitiesStep';
+import { EmotionsStep } from '@/features/mood/components/steps/EmotionsStep';
+import { MoodStep } from '@/features/mood/components/steps/MoodStep';
+import { NoteStep } from '@/features/mood/components/steps/NoteStep';
+import { PhotosStep } from '@/features/mood/components/steps/PhotosStep';
+import { useMoodEntry, useSaveMoodEntry } from '@/features/mood/hooks';
 import { getRandomQuote } from '@/features/mood/quotes';
 import { getMoodPhotoSignedUrls, uploadMoodPhoto } from '@/features/mood/upload';
-import { useInventory } from '@/features/inventory/hooks';
-import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 import type { MoodLevel } from '@/lib/theme';
+
+const STEPS = ['mood', 'emotions', 'activities', 'note', 'photos'] as const;
+type Step = (typeof STEPS)[number];
+
+const STEP_HEADER: Record<Step, string> = {
+  mood: 'Step 1 / 5',
+  emotions: 'Step 2 / 5',
+  activities: 'Step 3 / 5',
+  note: 'Step 4 / 5',
+  photos: 'Step 5 / 5',
+};
+
+const AUTO_ADVANCE_MS = 350;
 
 export default function HomeScreen() {
   const user = useUser();
@@ -51,10 +49,11 @@ export default function HomeScreen() {
 
   const isFutureDate = isAfter(startOfDay(parseISO(activeDate)), startOfDay(new Date()));
 
-  // Success sheet state
-  const [successVisible, setSuccessVisible] = useState(false);
-  const [successQuote, setSuccessQuote] = useState('');
-  const [successIsUpdate, setSuccessIsUpdate] = useState(false);
+  // Step state
+  const [step, setStep] = useState<Step>('mood');
+  const stepIndex = STEPS.indexOf(step);
+  const isFirst = stepIndex === 0;
+  const isLast = stepIndex === STEPS.length - 1;
 
   // Form state
   const [moodLevel, setMoodLevel] = useState<MoodLevel | null>(null);
@@ -68,9 +67,15 @@ export default function HomeScreen() {
   const [photos, setPhotos] = useState<(PhotoSlot | null)[]>([null, null, null]);
   const [hydrated, setHydrated] = useState(false);
 
-  // Reset form state khi date đổi (user navigate sang ngày khác)
+  // Success sheet
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successQuote, setSuccessQuote] = useState('');
+  const [successIsUpdate, setSuccessIsUpdate] = useState(false);
+
+  // Reset form khi date đổi
   useEffect(() => {
     setHydrated(false);
+    setStep('mood');
     setMoodLevel(null);
     setEmotions([]);
     setHobbies([]);
@@ -82,17 +87,14 @@ export default function HomeScreen() {
     setPhotos([null, null, null]);
   }, [activeDate]);
 
-  // Prefill entry data + load signed URLs cho photos đã có
+  // Prefill khi load entry cũ
   useEffect(() => {
-    if (hydrated) return;
-    if (entryQuery.isLoading) return;
-
+    if (hydrated || entryQuery.isLoading) return;
     const data = entryQuery.data;
     if (!data) {
       setHydrated(true);
       return;
     }
-
     setMoodLevel(data.mood_level);
     setEmotions(data.emotions);
     setHobbies(data.hobbies);
@@ -101,8 +103,6 @@ export default function HomeScreen() {
     setWeather(data.weather);
     setOtherTags(data.other_tags);
     setNote(data.note ?? '');
-
-    // Convert photo paths → signed URLs để hiển thị
     if (data.photo_urls.length > 0) {
       getMoodPhotoSignedUrls(data.photo_urls)
         .then((urls) => {
@@ -114,40 +114,44 @@ export default function HomeScreen() {
         })
         .catch((err) => console.warn('[photo signed url]', err));
     }
-
     setHydrated(true);
   }, [entryQuery.data, entryQuery.isLoading, hydrated]);
+
+  const goNext = () => {
+    if (!isLast) setStep(STEPS[stepIndex + 1]);
+  };
+  const goPrev = () => {
+    if (!isFirst) setStep(STEPS[stepIndex - 1]);
+  };
+
+  const handleMoodPick = (level: MoodLevel) => {
+    setMoodLevel(level);
+    // Auto-advance sau pick mood (UX guided)
+    setTimeout(() => goNext(), AUTO_ADVANCE_MS);
+  };
 
   const onSave = async () => {
     if (!user) return;
     if (isFutureDate) {
-      Alert.alert(
-        'Không thể log ngày tương lai',
-        'Cảm xúc chỉ có thể log cho ngày hôm nay hoặc ngày trong quá khứ.',
-      );
+      Alert.alert('Không thể log ngày tương lai', 'Cảm xúc chỉ log cho ngày hôm nay/quá khứ.');
       return;
     }
     if (moodLevel === null) {
-      Alert.alert('Chưa chọn mood', 'Bạn chưa chọn cảm xúc của ngày hôm nay.');
+      Alert.alert('Chưa chọn mood', 'Quay lại Step 1 để chọn cảm xúc.');
       return;
     }
 
     try {
-      // 1) Upload pending photos PARALLEL — Promise.all thay vì sequential for loop.
-      // 3 photos: ~3x nhanh hơn (mỗi upload chạy đồng thời thay vì xếp hàng).
+      // Parallel photo upload
       const uploadTasks = photos.map(async (slot, i) => {
         if (!slot) return null;
-        if (slot.path) return slot.path; // đã có trong DB, không upload lại
+        if (slot.path) return slot.path;
         if (slot.pendingBase64) {
           return uploadMoodPhoto({
             userId: user.id,
             date: activeDate,
             index: i,
-            asset: {
-              uri: slot.uri,
-              base64: slot.pendingBase64,
-              mimeType: slot.pendingMime,
-            },
+            asset: { uri: slot.uri, base64: slot.pendingBase64, mimeType: slot.pendingMime },
           });
         }
         return null;
@@ -155,7 +159,6 @@ export default function HomeScreen() {
       const uploadResults = await Promise.all(uploadTasks);
       const photoPaths = uploadResults.filter((p): p is string => p !== null);
 
-      // 2) Upsert mood_entry với photo_urls
       const wasExisting = !!entryQuery.data;
       await saveMutation.mutateAsync({
         userId: user.id,
@@ -172,7 +175,7 @@ export default function HomeScreen() {
           photo_urls: photoPaths,
         },
       });
-      // Show success sheet thay vì Alert — engagement loop
+
       setSuccessQuote(getRandomQuote());
       setSuccessIsUpdate(wasExisting);
       setSuccessVisible(true);
@@ -182,6 +185,7 @@ export default function HomeScreen() {
     }
   };
 
+  // Loading state
   if (entryQuery.isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -192,13 +196,10 @@ export default function HomeScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Header */}
+  // Future date guard — override toàn bộ
+  if (isFutureDate) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
           <Pressable
@@ -211,95 +212,142 @@ export default function HomeScreen() {
           </Pressable>
           <View style={styles.headerSpacer} />
         </View>
+        <View style={styles.futureBox}>
+          <Ionicons name="time-outline" size={56} color={colors.text.secondary} />
+          <Text style={styles.futureTitle}>Tương lai chưa tới</Text>
+          <Text style={styles.futureText}>
+            Cảm xúc chỉ log được cho ngày hôm nay hoặc quá khứ. Quay lại sau nhé.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <SectionCard title="How was your day?">
-            <MoodPicker value={moodLevel} onChange={setMoodLevel} />
-          </SectionCard>
-
-          <SectionCard title="Emotions">
-            <TagGrid options={EMOTIONS} selected={emotions} onChange={setEmotions} />
-          </SectionCard>
-
-          <SectionCard title="Hobbies">
-            <TagGrid options={HOBBIES} selected={hobbies} onChange={setHobbies} />
-          </SectionCard>
-
-          <SectionCard title="Meals">
-            <TagGrid options={MEALS} selected={meals} onChange={setMeals} />
-          </SectionCard>
-
-          <SectionCard title="Self-Care">
-            <TagGrid options={SELF_CARE} selected={selfCare} onChange={setSelfCare} />
-          </SectionCard>
-
-          <SectionCard title="Weather">
-            <TagGrid options={WEATHER} selected={weather} onChange={setWeather} />
-          </SectionCard>
-
-          <SectionCard title="Other">
-            <TagGrid options={OTHER_TAGS} selected={otherTags} onChange={setOtherTags} />
-          </SectionCard>
-
-          <SectionCard title="Today's note">
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="Write here..."
-              placeholderTextColor={colors.text.secondary}
-              multiline
-              style={styles.noteInput}
-              textAlignVertical="top"
-            />
-          </SectionCard>
-
-          <SectionCard title="Today's photo">
-            <PhotoPicker photos={photos} onChange={setPhotos} />
-          </SectionCard>
-
-          {/* Success sheet */}
-          <SaveSuccessSheet
-            visible={successVisible}
-            onDismiss={() => setSuccessVisible(false)}
-            onViewGarden={() => {
-              setSuccessVisible(false);
-              router.push('/garden' as never);
-            }}
-            plantType={activePlant}
-            moodLevel={moodLevel}
-            isUpdate={successIsUpdate}
-            quote={successQuote}
+  // Render step content
+  const renderStep = () => {
+    switch (step) {
+      case 'mood':
+        return <MoodStep value={moodLevel} onChange={handleMoodPick} />;
+      case 'emotions':
+        return <EmotionsStep value={emotions} onChange={setEmotions} />;
+      case 'activities':
+        return (
+          <ActivitiesStep
+            hobbies={hobbies}
+            setHobbies={setHobbies}
+            meals={meals}
+            setMeals={setMeals}
+            selfCare={selfCare}
+            setSelfCare={setSelfCare}
+            weather={weather}
+            setWeather={setWeather}
+            otherTags={otherTags}
+            setOtherTags={setOtherTags}
           />
+        );
+      case 'note':
+        return <NoteStep value={note} onChange={setNote} />;
+      case 'photos':
+        return <PhotosStep value={photos} onChange={setPhotos} />;
+    }
+  };
 
-          {isFutureDate ? (
-            <View style={styles.futureNotice}>
-              <Ionicons name="time-outline" size={20} color={colors.text.secondary} />
-              <Text style={styles.futureNoticeText}>
-                Không thể log cảm xúc cho ngày tương lai.
-              </Text>
-            </View>
-          ) : (
-            <Button
-              label={entryQuery.data ? 'Update' : 'Done'}
-              onPress={onSave}
-              loading={saveMutation.isPending}
-              fullWidth
-              style={styles.doneBtn}
-            />
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+  const canSave = moodLevel !== null;
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.push('/home/calendar')}
+          hitSlop={8}
+          style={styles.headerLeft}
+        >
+          <Ionicons name="calendar-outline" size={22} color={colors.primary} />
+        </Pressable>
+        <Pressable
+          onPress={() => router.push('/home/calendar')}
+          style={styles.headerCenter}
+          hitSlop={8}
+        >
+          <Text style={styles.headerDate}>{dateLabel}</Text>
+          <Ionicons name="chevron-down" size={14} color={colors.primary} />
+        </Pressable>
+        <View style={styles.headerRight}>
+          <Text style={styles.stepLabel}>{STEP_HEADER[step]}</Text>
+        </View>
+      </View>
+
+      {/* Progress */}
+      <StepProgress current={stepIndex} total={STEPS.length} />
+
+      {/* Content */}
+      <View style={styles.content}>{renderStep()}</View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        {!isFirst ? (
+          <Pressable onPress={goPrev} style={styles.footerLink} hitSlop={8}>
+            <Ionicons name="chevron-back" size={18} color={colors.text.secondary} />
+            <Text style={styles.footerLinkText}>Back</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.footerSpacer} />
+        )}
+
+        {isLast ? (
+          <Button
+            label={entryQuery.data ? 'Update' : 'Done'}
+            onPress={onSave}
+            loading={saveMutation.isPending}
+            disabled={!canSave}
+            style={styles.primaryBtn}
+          />
+        ) : step === 'mood' ? (
+          // Mood step auto-advances, hide Next button (vẫn có Skip)
+          <Pressable onPress={goNext} style={styles.footerLink} hitSlop={8}>
+            <Text style={styles.footerLinkText}>Skip</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.text.secondary} />
+          </Pressable>
+        ) : (
+          <Button label="Next" onPress={goNext} style={styles.primaryBtn} />
+        )}
+
+        {!isFirst && !isLast ? (
+          <Pressable
+            onPress={canSave ? onSave : undefined}
+            disabled={!canSave || saveMutation.isPending}
+            hitSlop={8}
+            style={styles.footerLink}
+          >
+            <Text style={[styles.footerLinkText, !canSave && styles.disabled]}>
+              Save now
+            </Text>
+          </Pressable>
+        ) : (
+          <View style={styles.footerSpacer} />
+        )}
+      </View>
+
+      {/* Success sheet */}
+      <SaveSuccessSheet
+        visible={successVisible}
+        onDismiss={() => setSuccessVisible(false)}
+        onViewGarden={() => {
+          setSuccessVisible(false);
+          router.push('/garden' as never);
+        }}
+        plantType={activePlant}
+        moodLevel={moodLevel}
+        isUpdate={successIsUpdate}
+        quote={successQuote}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.white },
-  flex: { flex: 1 },
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: {
     fontFamily: typography.fontFamily.regular,
@@ -309,50 +357,86 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  headerLeft: {
+    width: 40,
+    alignItems: 'flex-start',
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerCenter: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: 4,
   },
   headerDate: {
     fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.md,
     color: colors.primary,
   },
-  headerSpacer: { width: 22 },
-  scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    paddingBottom: spacing.xxl,
+  headerRight: {
+    width: 60,
+    alignItems: 'flex-end',
   },
-  noteInput: {
-    backgroundColor: colors.white,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    minHeight: 80,
-    fontFamily: typography.fontFamily.regular,
-    fontSize: typography.sizes.md,
-    color: colors.text.primary,
+  stepLabel: {
+    fontFamily: typography.fontFamily.semibold,
+    fontSize: typography.sizes.xs,
+    color: colors.text.secondary,
   },
-  doneBtn: { marginTop: spacing.md },
-  futureNotice: {
+  content: {
+    flex: 1,
+  },
+  footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.cream,
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    marginTop: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  futureNoticeText: {
+  footerLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.sm,
+    minWidth: 70,
+  },
+  footerLinkText: {
     fontFamily: typography.fontFamily.semibold,
+    fontSize: typography.sizes.sm,
+    color: colors.text.secondary,
+  },
+  footerSpacer: {
+    minWidth: 70,
+  },
+  primaryBtn: {
+    minWidth: 140,
+  },
+  disabled: {
+    opacity: 0.4,
+  },
+  futureBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  futureTitle: {
+    fontFamily: typography.fontFamily.bold,
+    fontSize: typography.sizes.lg,
+    color: colors.text.primary,
+  },
+  futureText: {
+    fontFamily: typography.fontFamily.regular,
     fontSize: typography.sizes.sm,
     color: colors.text.secondary,
     textAlign: 'center',
