@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -39,20 +39,6 @@ export default function GardenScreen() {
   });
 
   const plantCount = useMemo(() => entriesQuery.data?.length ?? 0, [entriesQuery.data]);
-
-  // Diagnostic — surface entries để debug bug "không hiển thị cây ở tháng past"
-  useEffect(() => {
-    if (entriesQuery.data) {
-      console.warn(
-        '[Garden] yearMonth:',
-        yearMonth,
-        'count:',
-        entriesQuery.data.length,
-        'dates:',
-        entriesQuery.data.map((e) => e.entry_date),
-      );
-    }
-  }, [yearMonth, entriesQuery.data]);
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
   const [pickerOpen, setPickerOpen] = useState(false);

@@ -5,9 +5,14 @@ import type { PlantType } from '../mapping';
 import type { MoodEntry } from '@/features/mood/types';
 import { colors, radii, spacing } from '@/lib/theme';
 
-const ROWS = 5;
+// 6 rows × 6 cols = 36 cells để fit mọi tháng:
+// - Feb (28-29 ngày): cells 28-35 inactive (8 dư)
+// - Apr/Jun/Sep/Nov (30 ngày): cells 30-35 inactive (6 dư)
+// - Jan/Mar/May/Jul/Aug/Oct/Dec (31 ngày): cells 31-35 inactive (5 dư)
+// Trước đây 5×6=30 → day 31 ngoài grid → bug "cây không hiện".
+const ROWS = 6;
 const COLS = 6;
-const TOTAL_CELLS = ROWS * COLS; // 30 cells
+const TOTAL_CELLS = ROWS * COLS; // 36 cells
 
 interface GardenGridProps {
   monthStart: Date;
