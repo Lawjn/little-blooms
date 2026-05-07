@@ -20,6 +20,8 @@ import { PhotosStep } from '@/features/mood/components/steps/PhotosStep';
 import { useMoodEntry, useSaveMoodEntry } from '@/features/mood/hooks';
 import { getRandomQuote } from '@/features/mood/quotes';
 import { getMoodPhotoSignedUrls, uploadMoodPhoto } from '@/features/mood/upload';
+import { QuickLogModal } from '@/features/pulse/components/QuickLogModal';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 import type { MoodLevel } from '@/lib/theme';
 
@@ -85,6 +87,9 @@ export default function HomeScreen() {
   const [successVisible, setSuccessVisible] = useState(false);
   const [successQuote, setSuccessQuote] = useState('');
   const [successIsUpdate, setSuccessIsUpdate] = useState(false);
+
+  // Pulse modal — pulse review move sang Garden info screen, Home chỉ có nút mở
+  const [pulseModalVisible, setPulseModalVisible] = useState(false);
 
   // Reset form khi date đổi
   useEffect(() => {
@@ -289,9 +294,13 @@ export default function HomeScreen() {
           <Text style={styles.headerDate}>{dateLabel}</Text>
           <Ionicons name="chevron-down" size={14} color={colors.primary} />
         </Pressable>
-        <View style={styles.headerRight}>
-          <Text style={styles.stepLabel}>{STEP_HEADER[step]}</Text>
-        </View>
+        <Pressable
+          onPress={() => setPulseModalVisible(true)}
+          hitSlop={8}
+          style={styles.pulseBtn}
+        >
+          <MaterialCommunityIcons name="plus" size={18} color={colors.white} />
+        </Pressable>
       </View>
 
       {/* Progress */}
@@ -347,6 +356,12 @@ export default function HomeScreen() {
         )}
       </View>
 
+      {/* Quick log modal — pulse */}
+      <QuickLogModal
+        visible={pulseModalVisible}
+        onClose={() => setPulseModalVisible(false)}
+      />
+
       {/* Success sheet */}
       <SaveSuccessSheet
         visible={successVisible}
@@ -398,14 +413,13 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.primary,
   },
-  headerRight: {
-    width: 60,
-    alignItems: 'flex-end',
-  },
-  stepLabel: {
-    fontFamily: typography.fontFamily.semibold,
-    fontSize: typography.sizes.xs,
-    color: colors.text.secondary,
+  pulseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

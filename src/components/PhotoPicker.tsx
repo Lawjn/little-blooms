@@ -1,4 +1,4 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,32 +26,35 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
   const slots: (PhotoSlot | null)[] = [...photos];
   while (slots.length < maxPhotos) slots.push(null);
 
-  const requestPerm = async () => {
+  const requestLibraryPerm = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Cần quyền truy cập ảnh',
-        'Vào Settings → Little Blooms → Photos để cấp quyền.',
-      );
+      Alert.alert('Cần quyền truy cập ảnh', 'Vào Settings → Little Blooms → Photos để cấp quyền.');
       return false;
     }
     return true;
   };
 
-  const pickAtIndex = async (index: number) => {
-    const ok = await requestPerm();
-    if (!ok) return;
+  const requestCameraPerm = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Cần quyền camera', 'Vào Settings → Little Blooms → Camera để cấp quyền.');
+      return false;
+    }
+    return true;
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+  const handleCameraCapture = async (index: number) => {
+    const ok = await requestCameraPerm();
+    if (!ok) return;
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.5, // 0.5 đủ chất lượng cho journal photo, upload nhanh hơn ~30-40%
+      quality: 0.5,
       base64: true,
     });
-
     if (result.canceled) return;
     const asset = result.assets[0];
-
     const next = [...slots];
     next[index] = {
       uri: asset.uri,
@@ -59,6 +62,49 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
       pendingMime: asset.mimeType ?? 'image/jpeg',
     };
     onChange(next);
+  };
+
+  const handleLibraryPick = async (index: number) => {
+    const ok = await requestLibraryPerm();
+    if (!ok) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.5,
+      base64: true,
+    });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    const next = [...slots];
+    next[index] = {
+      uri: asset.uri,
+      pendingBase64: asset.base64,
+      pendingMime: asset.mimeType ?? 'image/jpeg',
+    };
+    onChange(next);
+  };
+
+  const pickAtIndex = (index: number) => {
+    if (Platform.OS === 'ios') {
+      // Native iOS action sheet
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', '📷 Take Photo', '🖼 Choose from Library'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) handleCameraCapture(index);
+          else if (buttonIndex === 2) handleLibraryPick(index);
+        },
+      );
+    } else {
+      // Android: Alert with 3 buttons (no native action sheet)
+      Alert.alert('Add photo', 'Chọn nguồn ảnh', [
+        { text: 'Take Photo', onPress: () => handleCameraCapture(index) },
+        { text: 'Choose from Library', onPress: () => handleLibraryPick(index) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
   };
 
   const removeAtIndex = (index: number) => {
