@@ -92,6 +92,12 @@ export default function GardenScreen() {
   }, [entriesQuery.data, pulsesRangeQuery.data, user?.id]);
 
   const plantCount = enhancedEntries.length;
+
+  // Today hint: nếu đang view tháng hiện tại + today có data (entry hoặc pulse),
+  // hiện speech bubble "chạm cây để xem chi tiết" pointing tới today's cell.
+  const todayDateStr = format(today, 'yyyy-MM-dd');
+  const todayHasData = enhancedEntries.some((e) => e.entry_date === todayDateStr);
+  const todayHintDay = isAtCurrentMonth && todayHasData ? today.getDate() : undefined;
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -178,6 +184,7 @@ export default function GardenScreen() {
               entries={enhancedEntries}
               plantType={activePlant}
               onCellPress={onCellPress}
+              todayHintDay={todayHintDay}
             />
           )}
 

@@ -1,9 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { format } from 'date-fns';
 import { Flower } from './Flower';
 import type { PlantType } from '../mapping';
 import type { MoodEntry } from '@/features/mood/types';
-import { colors, radii, spacing } from '@/lib/theme';
+import { colors, radii, shadows, spacing, typography } from '@/lib/theme';
 
 // 6 rows × 6 cols = 36 cells để fit mọi tháng:
 // - Feb (28-29 ngày): cells 28-35 inactive (8 dư)
@@ -20,7 +20,13 @@ interface GardenGridProps {
   entries: MoodEntry[];
   plantType: PlantType;
   onCellPress?: (date: string) => void;
+  /** Day number của hôm nay nếu đang view tháng hiện tại + today có data (entry/pulse).
+   * Show speech bubble tooltip "chạm vào cây để xem chi tiết" pointing to today's cell. */
+  todayHintDay?: number;
 }
+
+const CELL_SIZE = 50;
+const FRAME_PADDING = 8; // spacing.sm
 
 /**
  * Grid 5×6 = 30 cells, mỗi cell là 1 ngày trong tháng.
@@ -34,10 +40,22 @@ export function GardenGrid({
   entries,
   plantType,
   onCellPress,
+  todayHintDay,
 }: GardenGridProps) {
   // Index entries by entry_date để lookup nhanh
   const entryByDate = new Map<string, MoodEntry>();
   for (const e of entries) entryByDate.set(e.entry_date, e);
+
+  // Calculate position of today's cell cho speech bubble tooltip
+  let todayCellLeft = 0;
+  let todayCellTop = 0;
+  if (todayHintDay && todayHintDay <= daysInMonth) {
+    const idx = todayHintDay - 1;
+    const col = idx % COLS;
+    const row = Math.floor(idx / COLS);
+    todayCellLeft = FRAME_PADDING + col * CELL_SIZE + CELL_SIZE / 2;
+    todayCellTop = FRAME_PADDING + row * CELL_SIZE;
+  }
 
   return (
     <View style={styles.frame}>
@@ -71,11 +89,30 @@ export function GardenGrid({
           );
         })}
       </View>
+
+      {/* Speech bubble tooltip cho today's cell — pointing down */}
+      {todayHintDay && todayHintDay <= daysInMonth ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.tooltip,
+            {
+              left: todayCellLeft - 90, // bubble width 180 / 2 = 90
+              top: todayCellTop - 64, // bubble height ~52 + arrow 12
+            },
+          ]}
+        >
+          <View style={styles.tooltipBubble}>
+            <Text style={styles.tooltipText}>
+              Chạm cây để xem trọn vẹn cảm xúc hôm nay 💛
+            </Text>
+          </View>
+          <View style={styles.tooltipArrow} />
+        </View>
+      ) : null}
     </View>
   );
 }
-
-const CELL_SIZE = 50;
 
 const styles = StyleSheet.create({
   frame: {
@@ -106,6 +143,37 @@ const styles = StyleSheet.create({
   },
   cellPressed: {
     backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  tooltip: {
+    position: 'absolute',
+    width: 180,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  tooltipBubble: {
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.md,
+    ...shadows.md,
+  },
+  tooltipText: {
+    fontFamily: typography.fontFamily.semibold,
+    fontSize: typography.sizes.xs,
+    color: colors.text.primary,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  tooltipArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 12,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: colors.white,
+    marginTop: -1,
   },
 });
 

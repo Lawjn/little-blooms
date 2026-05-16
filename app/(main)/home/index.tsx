@@ -309,107 +309,98 @@ export default function HomeScreen() {
     </View>
   );
 
-  // Decision mode — đã có main entry
-  if (viewMode === 'decision' && entryQuery.data && user) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {renderHeader()}
-        <DecisionScreen
-          entry={entryQuery.data}
-          plantType={activePlant}
-          isToday={isToday}
-          userId={user.id}
-          date={activeDate}
-          onUpdate={() => setViewMode('wizard')}
-          onQuickPulse={() => setPulseModalVisible(true)}
-        />
+  // Decision/Wizard content — share modals (SaveSuccessSheet, QuickLogModal) below
+  const isDecisionMode = viewMode === 'decision' && entryQuery.data && user;
 
-        {/* Quick log modal */}
-        <QuickLogModal
-          visible={pulseModalVisible}
-          onClose={() => setPulseModalVisible(false)}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  // Wizard mode (default cho chưa có entry, hoặc user tap "Update reflection")
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {renderHeader()}
 
-      {/* Progress */}
-      <StepProgress current={stepIndex} total={STEPS.length} />
+      {isDecisionMode ? (
+        <DecisionScreen
+          entry={entryQuery.data!}
+          plantType={activePlant}
+          isToday={isToday}
+          userId={user!.id}
+          date={activeDate}
+          onUpdate={() => setViewMode('wizard')}
+          onQuickPulse={() => setPulseModalVisible(true)}
+        />
+      ) : (
+        <>
+          {/* Progress */}
+          <StepProgress current={stepIndex} total={STEPS.length} />
 
-      {/* Quick pulse alternative — visible mọi step để user có thể bypass wizard */}
-      <View style={styles.quickPulseBar}>
-        <Pressable
-          onPress={() => setPulseModalVisible(true)}
-          hitSlop={6}
-          style={styles.quickPulsePill}
-        >
-          <Ionicons name="flash" size={12} color={colors.white} />
-          <Text style={styles.quickPulseText}>Or quick pulse</Text>
-        </Pressable>
-      </View>
+          {/* Quick pulse alternative */}
+          <View style={styles.quickPulseBar}>
+            <Pressable
+              onPress={() => setPulseModalVisible(true)}
+              hitSlop={6}
+              style={styles.quickPulsePill}
+            >
+              <Ionicons name="flash" size={12} color={colors.white} />
+              <Text style={styles.quickPulseText}>Or quick pulse</Text>
+            </Pressable>
+          </View>
 
-      {/* Content — fade transition giữa các steps */}
-      <Animated.View style={[styles.content, { opacity: stepFade }]}>
-        {renderStep()}
-      </Animated.View>
+          {/* Step content */}
+          <Animated.View style={[styles.content, { opacity: stepFade }]}>
+            {renderStep()}
+          </Animated.View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        {!isFirst ? (
-          <Pressable onPress={goPrev} style={styles.footerLink} hitSlop={8}>
-            <Ionicons name="chevron-back" size={18} color={colors.text.secondary} />
-            <Text style={styles.footerLinkText}>Back</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.footerSpacer} />
-        )}
+          {/* Footer */}
+          <View style={styles.footer}>
+            {!isFirst ? (
+              <Pressable onPress={goPrev} style={styles.footerLink} hitSlop={8}>
+                <Ionicons name="chevron-back" size={18} color={colors.text.secondary} />
+                <Text style={styles.footerLinkText}>Back</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.footerSpacer} />
+            )}
 
-        {isLast ? (
-          <Button
-            label={entryQuery.data ? 'Update' : 'Done'}
-            onPress={onSave}
-            loading={saveMutation.isPending}
-            disabled={!canSave}
-            style={styles.primaryBtn}
-          />
-        ) : step === 'mood' ? (
-          // Mood step auto-advances, hide Next button (vẫn có Skip)
-          <Pressable onPress={goNext} style={styles.footerLink} hitSlop={8}>
-            <Text style={styles.footerLinkText}>Skip</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.text.secondary} />
-          </Pressable>
-        ) : (
-          <Button label="Next" onPress={goNext} style={styles.primaryBtn} />
-        )}
+            {isLast ? (
+              <Button
+                label={entryQuery.data ? 'Update' : 'Done'}
+                onPress={onSave}
+                loading={saveMutation.isPending}
+                disabled={!canSave}
+                style={styles.primaryBtn}
+              />
+            ) : step === 'mood' ? (
+              <Pressable onPress={goNext} style={styles.footerLink} hitSlop={8}>
+                <Text style={styles.footerLinkText}>Skip</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.text.secondary} />
+              </Pressable>
+            ) : (
+              <Button label="Next" onPress={goNext} style={styles.primaryBtn} />
+            )}
 
-        {!isFirst && !isLast ? (
-          <Pressable
-            onPress={canSave ? onSave : undefined}
-            disabled={!canSave || saveMutation.isPending}
-            hitSlop={8}
-            style={styles.footerLink}
-          >
-            <Text style={[styles.footerLinkText, !canSave && styles.disabled]}>
-              Save now
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={styles.footerSpacer} />
-        )}
-      </View>
+            {!isFirst && !isLast ? (
+              <Pressable
+                onPress={canSave ? onSave : undefined}
+                disabled={!canSave || saveMutation.isPending}
+                hitSlop={8}
+                style={styles.footerLink}
+              >
+                <Text style={[styles.footerLinkText, !canSave && styles.disabled]}>
+                  Save now
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={styles.footerSpacer} />
+            )}
+          </View>
+        </>
+      )}
 
-      {/* Quick log modal — pulse */}
+      {/* Quick log modal — common cho cả 2 modes */}
       <QuickLogModal
         visible={pulseModalVisible}
         onClose={() => setPulseModalVisible(false)}
       />
 
-      {/* Success sheet */}
+      {/* Success sheet — common, render BOTH modes để không miss khi viewMode flip sau save */}
       <SaveSuccessSheet
         visible={successVisible}
         onDismiss={() => setSuccessVisible(false)}
