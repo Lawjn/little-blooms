@@ -7,6 +7,7 @@ export interface UserInventory {
   owned_themes: string[];
   active_theme: string;
   active_plant: PlantType;
+  owned_plants: PlantType[];
   updated_at: string;
 }
 
@@ -21,8 +22,6 @@ export async function getInventory(userId: string): Promise<UserInventory | null
 }
 
 export async function updateActivePlant(params: { userId: string; plant: PlantType }) {
-  // Dùng upsert thay vì update — defensive cho user đã signup trước khi có trigger
-  // handle_new_user. Nếu row chưa tồn tại, insert default + active_plant.
   const { data, error } = await supabase
     .from('user_inventory')
     .upsert(
@@ -36,4 +35,97 @@ export async function updateActivePlant(params: { userId: string; plant: PlantTy
     throw error;
   }
   return data as UserInventory;
+}
+
+/**
+ * Cộng seeds — dùng cho reward (main entry save, streak bonus) hoặc buy with $$.
+ */
+export async function addSeeds(params: { userId: string; amount: number }) {
+  // Read current, then update — RLS prevents race with single user
+  const current = await getInventory(params.userId);
+  const newBalance = (current?.seeds_balance ?? 0) + params.amount;
+  const { data, error } = await supabase
+    .from('user_inventory')
+    .upsert(
+      { user_id: params.userId, seeds_balance: newBalance },
+      { onConflict: 'user_id' },
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data as UserInventory;
+}
+
+/**
+ * Spend seeds + unlock plant. Atomic-ish (read balance → check → update).
+ * Throw nếu không đủ seeds hoặc plant đã unlock.
+ */
+export async function unlockPlant(params: {
+  userId: string;
+  plant: PlantType;
+  cost: number;
+}) {
+  const current = await getInventory(params.userId);
+  if (!current) throw new Error('Inventory not found');
+  if (current.owned_plants.includes(params.plant)) {
+    throw new Error('Plant đã được unlock rồi');
+  }
+  if (current.seeds_balance < params.cost) {
+    throw new Error(
+      `Không đủ seeds. Cần ${params.cost}, hiện có ${current.seeds_balance}.`,
+    );
+  }
+
+  const newBalance = current.seeds_balance - params.cost;
+  const newOwned = [...current.owned_plants, params.plant];
+  const { data, error } = await supabase
+    .from('user_inventory')
+    .update({
+      seeds_balance: newBalance,
+      owned_plants: newOwned,
+    })
+    .eq('user_id', params.userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as UserInventory;
+}
+
+/**
+ * Fake purchase seeds với $$ — dùng cho coursework demo (không cần real IAP).
+ * Cộng seeds + log transaction vào purchases table.
+ */
+export async function fakePurchaseSeeds(params: {
+  userId: string;
+  amount: number;
+  pricePaidVnd: number;
+}) {
+  const updated = await addSeeds({ userId: params.userId, amount: params.amount });
+
+  // Log fake transaction
+  await supabase.from('purchases').insert({
+    user_id: params.userId,
+    platform: 'ios', // fake
+    receipt: `fake-receipt-${Date.now()}`,
+    transaction_id: `fake-txn-${Date.now()}`,
+    amount_vnd: params.pricePaidVnd,
+    status: 'completed',
+    completed_at: new Date().toISOString(),
+  });
+
+  return updated;
+}
+
+/**
+ * Toggle premium status — fake subscription cho coursework.
+ */
+export async function setPremium(params: { userId: string; isPremium: boolean }) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_premium: params.isPremium })
+    .eq('id', params.userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
