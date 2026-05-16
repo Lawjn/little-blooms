@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/Button';
 import { useSignOut } from '@/features/auth/hooks';
@@ -118,6 +118,30 @@ export default function ProfileScreen() {
         {/* Streak */}
         <StreakIndicator />
 
+        {/* Premium badge */}
+        {profileQuery.data?.is_premium ? (
+          <View style={styles.premiumBadge}>
+            <MaterialCommunityIcons name="crown" size={20} color={colors.white} />
+            <Text style={styles.premiumText}>Bloom Premium ✨</Text>
+            <Pressable
+              onPress={() => router.push('/store/premium' as never)}
+              hitSlop={8}
+              style={styles.manageBtn}
+            >
+              <Text style={styles.manageBtnText}>Manage</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => router.push('/store/premium' as never)}
+            style={styles.upgradeCta}
+          >
+            <MaterialCommunityIcons name="crown-outline" size={20} color="#7E57C2" />
+            <Text style={styles.upgradeText}>Unlock Bloom Premium</Text>
+            <Ionicons name="chevron-forward" size={16} color="#7E57C2" />
+          </Pressable>
+        )}
+
         {/* Gallery link */}
         <Pressable
           onPress={() => router.push('/gallery' as never)}
@@ -222,6 +246,49 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.regular,
     fontSize: typography.sizes.sm,
     color: colors.text.secondary,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: '#FFB300',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
+  },
+  premiumText: {
+    flex: 1,
+    fontFamily: typography.fontFamily.extrabold,
+    fontSize: typography.sizes.md,
+    color: colors.white,
+  },
+  manageBtn: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+  },
+  manageBtnText: {
+    fontFamily: typography.fontFamily.bold,
+    fontSize: typography.sizes.xs,
+    color: colors.white,
+  },
+  upgradeCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: '#F3E5F5',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: '#CE93D8',
+  },
+  upgradeText: {
+    flex: 1,
+    fontFamily: typography.fontFamily.bold,
+    fontSize: typography.sizes.md,
+    color: '#7E57C2',
   },
   linkCard: {
     flexDirection: 'row',

@@ -47,6 +47,13 @@ export default function MainLayout() {
         }}
       />
       <Tabs.Screen
+        name="store/index"
+        options={{
+          title: 'Store',
+          tabBarIcon: ({ color, size }) => <Ionicons name="storefront" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -57,6 +64,9 @@ export default function MainLayout() {
       <Tabs.Screen name="garden/[date]" options={{ href: null }} />
       <Tabs.Screen name="home/calendar" options={{ href: null }} />
       <Tabs.Screen name="gallery" options={{ href: null }} />
+      <Tabs.Screen name="store/seeds" options={{ href: null }} />
+      <Tabs.Screen name="store/plants" options={{ href: null }} />
+      <Tabs.Screen name="store/premium" options={{ href: null }} />
     </Tabs>
   );
 }

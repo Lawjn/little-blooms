@@ -9,6 +9,7 @@ import {
   format,
   getDaysInMonth,
   isSameMonth,
+  parseISO,
   startOfMonth,
   subMonths,
 } from 'date-fns';
@@ -16,10 +17,13 @@ import { GardenGrid } from '@/features/garden/components/GardenGrid';
 import { useMonthMoodEntries } from '@/features/garden/hooks';
 import { DEFAULT_PLANT, PLANT_LABEL } from '@/features/garden/mapping';
 import { useInventory } from '@/features/inventory/hooks';
+import { usePulsesInRange } from '@/features/pulse/hooks';
 import { PlantSwitcher } from '@/features/profile/components/PlantSwitcher';
 import { useUser } from '@/features/auth/store';
 import { Button } from '@/components/Button';
 import { colors, radii, shadows, spacing, typography } from '@/lib/theme';
+import type { MoodEntry } from '@/features/mood/types';
+import type { MoodLevel } from '@/lib/theme';
 
 export default function GardenScreen() {
   const user = useUser();
@@ -38,12 +42,68 @@ export default function GardenScreen() {
     yearMonth,
   });
 
-  const plantCount = useMemo(() => entriesQuery.data?.length ?? 0, [entriesQuery.data]);
+  const pulsesRangeQuery = usePulsesInRange({
+    userId: user?.id,
+    startDate: format(monthStart, 'yyyy-MM-dd'),
+    endDate: format(monthEnd, 'yyyy-MM-dd'),
+  });
+
+  // Merge entries với synthetic entries từ pulses (cho days không có main entry):
+  // mood_level = rounded avg của pulses ngày đó.
+  const enhancedEntries = useMemo<MoodEntry[]>(() => {
+    const realEntries = entriesQuery.data ?? [];
+    const pulses = pulsesRangeQuery.data ?? [];
+    const realDates = new Set(realEntries.map((e) => e.entry_date));
+
+    // Group pulses by entry_date (local date của logged_at)
+    const pulsesByDate = new Map<string, { sum: number; count: number }>();
+    for (const p of pulses) {
+      const date = format(parseISO(p.logged_at), 'yyyy-MM-dd');
+      const acc = pulsesByDate.get(date) ?? { sum: 0, count: 0 };
+      acc.sum += p.mood_level;
+      acc.count += 1;
+      pulsesByDate.set(date, acc);
+    }
+
+    // Synthetic entries cho days chỉ có pulses (không có main entry)
+    const synthetic: MoodEntry[] = [];
+    for (const [date, { sum, count }] of pulsesByDate.entries()) {
+      if (realDates.has(date)) continue;
+      const avg = Math.max(1, Math.min(5, Math.round(sum / count))) as MoodLevel;
+      synthetic.push({
+        id: `synthetic-${date}`,
+        user_id: user?.id ?? '',
+        entry_date: date,
+        mood_level: avg,
+        emotions: [],
+        hobbies: [],
+        meals: [],
+        self_care: [],
+        weather: [],
+        other_tags: [],
+        note: null,
+        photo_urls: [],
+        created_at: '',
+        updated_at: '',
+      });
+    }
+
+    return [...realEntries, ...synthetic];
+  }, [entriesQuery.data, pulsesRangeQuery.data, user?.id]);
+
+  const plantCount = enhancedEntries.length;
+
+  // Today hint: nếu đang view tháng hiện tại + today có data (entry hoặc pulse),
+  // hiện speech bubble "chạm cây để xem chi tiết" pointing tới today's cell.
+  const todayDateStr = format(today, 'yyyy-MM-dd');
+  const todayHasData = enhancedEntries.some((e) => e.entry_date === todayDateStr);
+  const todayHintDay = isAtCurrentMonth && todayHasData ? today.getDate() : undefined;
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const onCellPress = (date: string) => {
+    // Tap → Garden info — sẽ show entry + pulses (nếu có)
     router.push({ pathname: '/garden/[date]', params: { date } });
   };
 
@@ -121,9 +181,10 @@ export default function GardenScreen() {
             <GardenGrid
               monthStart={monthStart}
               daysInMonth={daysInMonth}
-              entries={entriesQuery.data ?? []}
+              entries={enhancedEntries}
               plantType={activePlant}
               onCellPress={onCellPress}
+              todayHintDay={todayHintDay}
             />
           )}
 
@@ -228,6 +289,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.lg,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    ...shadows.sm,
   },
   dateRange: {
     fontFamily: typography.fontFamily.extrabold,
@@ -237,9 +303,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   dateRangeSub: {
-    fontFamily: typography.fontFamily.regular,
+    fontFamily: typography.fontFamily.semibold,
     fontSize: typography.sizes.sm,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.white,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+    overflow: 'hidden',
+    marginTop: spacing.xs,
   },
   countRow: {
     flexDirection: 'row',

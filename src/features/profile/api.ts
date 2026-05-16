@@ -7,6 +7,7 @@ export interface Profile {
   avatar_url: string | null;
   streak_count: number;
   last_log_date: string | null;
+  is_premium: boolean;
   created_at: string;
   updated_at: string;
 }

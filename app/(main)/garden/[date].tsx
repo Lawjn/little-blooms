@@ -9,6 +9,8 @@ import { Flower } from '@/features/garden/components/Flower';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { useInventory } from '@/features/inventory/hooks';
 import { useUser } from '@/features/auth/store';
+import { PulseTimelineCard } from '@/features/pulse/components/PulseTimelineCard';
+import { useDeletePulse, useTodayPulses } from '@/features/pulse/hooks';
 import {
   EMOTIONS,
   HOBBIES,
@@ -30,7 +32,13 @@ export default function GardenInfoScreen() {
   const entryQuery = useMoodEntry({ userId: user?.id, date: date ?? '' });
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
+  const pulsesQuery = useTodayPulses({ userId: user?.id, date: date ?? '' });
+  const deletePulse = useDeletePulse();
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+
+  const handleDeletePulse = (pulseId: string) => {
+    deletePulse.mutate(pulseId);
+  };
 
   useEffect(() => {
     const paths = entryQuery.data?.photo_urls ?? [];
@@ -62,48 +70,75 @@ export default function GardenInfoScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {entryQuery.isLoading ? (
           <Text style={styles.loadingText}>Loading...</Text>
-        ) : !entry ? (
-          <Text style={styles.emptyText}>Không có entry cho ngày này.</Text>
         ) : (
           <>
-            {/* Mood + date */}
-            <View style={styles.heroBox}>
-              <Flower moodLevel={entry.mood_level} plantType={activePlant} size={80} />
-              <Text style={styles.dateText}>{dateLabel}</Text>
-              <Text style={styles.moodLabel}>
-                {MOOD_OPTIONS.find((m) => m.level === entry.mood_level)?.label}
-              </Text>
-            </View>
+            {entry ? (
+              <>
+                {/* Mood + date */}
+                <View style={styles.heroBox}>
+                  <Flower moodLevel={entry.mood_level} plantType={activePlant} size={80} />
+                  <Text style={styles.dateText}>{dateLabel}</Text>
+                  <Text style={styles.moodLabel}>
+                    {MOOD_OPTIONS.find((m) => m.level === entry.mood_level)?.label}
+                  </Text>
+                </View>
 
-            {/* Tag sections — chỉ hiện section có data */}
-            <TagSection title="Emotions" options={EMOTIONS} selected={entry.emotions} />
-            <TagSection title="Hobbies" options={HOBBIES} selected={entry.hobbies} />
-            <TagSection title="Meals" options={MEALS} selected={entry.meals} />
-            <TagSection title="Self-Care" options={SELF_CARE} selected={entry.self_care} />
-            <TagSection title="Weather" options={WEATHER} selected={entry.weather} />
-            <TagSection title="Other" options={OTHER_TAGS} selected={entry.other_tags} />
+                {/* Tag sections — chỉ hiện section có data */}
+                <TagSection title="Emotions" options={EMOTIONS} selected={entry.emotions} />
+                <TagSection title="Hobbies" options={HOBBIES} selected={entry.hobbies} />
+                <TagSection title="Meals" options={MEALS} selected={entry.meals} />
+                <TagSection title="Self-Care" options={SELF_CARE} selected={entry.self_care} />
+                <TagSection title="Weather" options={WEATHER} selected={entry.weather} />
+                <TagSection title="Other" options={OTHER_TAGS} selected={entry.other_tags} />
 
-            {/* Note */}
-            {entry.note ? (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Note</Text>
-                <Text style={styles.noteText}>{entry.note}</Text>
+                {/* Note */}
+                {entry.note ? (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Note</Text>
+                    <Text style={styles.noteText}>{entry.note}</Text>
+                  </View>
+                ) : null}
+
+                {/* Photos */}
+                {photoUrls.length > 0 ? (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Photos</Text>
+                    <View style={styles.photoRow}>
+                      {photoUrls.map((url, idx) => (
+                        <Image
+                          key={idx}
+                          source={{ uri: url }}
+                          style={styles.photo}
+                          contentFit="cover"
+                          transition={200}
+                          cachePolicy="memory-disk"
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            ) : pulsesQuery.data && pulsesQuery.data.length > 0 ? (
+              <View style={styles.heroBox}>
+                <Text style={styles.dateText}>{dateLabel}</Text>
+                <Text style={styles.moodLabel}>Chưa có main entry — chỉ có pulses</Text>
               </View>
-            ) : null}
+            ) : (
+              <Text style={styles.emptyText}>Không có entry cho ngày này.</Text>
+            )}
 
-            {/* Photos */}
-            {photoUrls.length > 0 ? (
+            {/* Pulses timeline — show nếu có */}
+            {pulsesQuery.data && pulsesQuery.data.length > 0 ? (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Photos</Text>
-                <View style={styles.photoRow}>
-                  {photoUrls.map((url, idx) => (
-                    <Image
-                      key={idx}
-                      source={{ uri: url }}
-                      style={styles.photo}
-                      contentFit="cover"
-                      transition={200}
-                      cachePolicy="memory-disk"
+                <Text style={styles.cardTitle}>
+                  Pulses throughout the day ({pulsesQuery.data.length})
+                </Text>
+                <View style={styles.pulseList}>
+                  {pulsesQuery.data.map((pulse) => (
+                    <PulseTimelineCard
+                      key={pulse.id}
+                      pulse={pulse}
+                      onDelete={handleDeletePulse}
                     />
                   ))}
                 </View>
@@ -225,6 +260,9 @@ const styles = StyleSheet.create({
   },
   photoRow: {
     flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  pulseList: {
     gap: spacing.sm,
   },
   photo: {

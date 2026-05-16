@@ -1,7 +1,9 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActionSheetIOS, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { CameraCapture, type CapturedAsset } from '@/components/CameraCapture';
 import { colors, radii, spacing, typography } from '@/lib/theme';
 
 export interface PhotoSlot {
@@ -26,32 +28,47 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
   const slots: (PhotoSlot | null)[] = [...photos];
   while (slots.length < maxPhotos) slots.push(null);
 
-  const requestPerm = async () => {
+  // Camera state — Locket-style fullscreen capture
+  const [cameraIndex, setCameraIndex] = useState<number | null>(null);
+  const cameraVisible = cameraIndex !== null;
+
+  const onCameraCaptured = (asset: CapturedAsset) => {
+    if (cameraIndex === null) return;
+    const next = [...slots];
+    next[cameraIndex] = {
+      uri: asset.uri,
+      pendingBase64: asset.base64,
+      pendingMime: asset.mimeType,
+    };
+    onChange(next);
+    setCameraIndex(null);
+  };
+
+  const requestLibraryPerm = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Cần quyền truy cập ảnh',
-        'Vào Settings → Little Blooms → Photos để cấp quyền.',
-      );
+      Alert.alert('Cần quyền truy cập ảnh', 'Vào Settings → Little Blooms → Photos để cấp quyền.');
       return false;
     }
     return true;
   };
 
-  const pickAtIndex = async (index: number) => {
-    const ok = await requestPerm();
-    if (!ok) return;
+  // Mở Locket-style fullscreen camera. Permission handled trong CameraCapture component.
+  const handleCameraCapture = (index: number) => {
+    setCameraIndex(index);
+  };
 
+  const handleLibraryPick = async (index: number) => {
+    const ok = await requestLibraryPerm();
+    if (!ok) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.5, // 0.5 đủ chất lượng cho journal photo, upload nhanh hơn ~30-40%
+      quality: 0.5,
       base64: true,
     });
-
     if (result.canceled) return;
     const asset = result.assets[0];
-
     const next = [...slots];
     next[index] = {
       uri: asset.uri,
@@ -61,6 +78,29 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
     onChange(next);
   };
 
+  const pickAtIndex = (index: number) => {
+    if (Platform.OS === 'ios') {
+      // Native iOS action sheet
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', '📷 Take Photo', '🖼 Choose from Library'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) handleCameraCapture(index);
+          else if (buttonIndex === 2) handleLibraryPick(index);
+        },
+      );
+    } else {
+      // Android: Alert with 3 buttons (no native action sheet)
+      Alert.alert('Add photo', 'Chọn nguồn ảnh', [
+        { text: 'Take Photo', onPress: () => handleCameraCapture(index) },
+        { text: 'Choose from Library', onPress: () => handleLibraryPick(index) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
+
   const removeAtIndex = (index: number) => {
     const next = [...slots];
     next[index] = null;
@@ -68,6 +108,7 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
   };
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.row}>
         {slots.slice(0, maxPhotos).map((slot, idx) => (
@@ -102,6 +143,14 @@ export function PhotoPicker({ photos, onChange, maxPhotos = MAX }: PhotoPickerPr
       </View>
       <Text style={styles.hint}>Select up to {maxPhotos} photos</Text>
     </View>
+
+    {/* Locket-style fullscreen camera */}
+    <CameraCapture
+      visible={cameraVisible}
+      onClose={() => setCameraIndex(null)}
+      onCapture={onCameraCaptured}
+    />
+    </>
   );
 }
 
