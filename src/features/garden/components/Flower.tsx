@@ -1,6 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { getMoodVisual, PLANT_EMOJI, type PlantType } from '../mapping';
-import { radii } from '@/lib/theme';
+import { StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { getMoodVisual, type PlantType } from '../mapping';
+import {
+  SVG_CHERRY,
+  SVG_CLOVER,
+  SVG_ROSE,
+  SVG_SUNFLOWER,
+  SVG_TULIP,
+} from '../gardenAssets';
 import type { MoodLevel } from '@/lib/theme';
 
 interface FlowerProps {
@@ -9,31 +16,25 @@ interface FlowerProps {
   size?: number;
 }
 
+const PLANT_SVG: Record<PlantType, string> = {
+  tulip: SVG_TULIP,
+  sunflower: SVG_SUNFLOWER,
+  rose: SVG_ROSE,
+  cherry: SVG_CHERRY,
+  clover: SVG_CLOVER,
+};
+
 /**
- * Render 1 cây của 1 ngày: cùng loài (plantType), màu nền + opacity + scale theo mood.
+ * Render 1 cây của 1 ngày: SVG illustration thật (icon Figma dùng).
+ * plantType → loài cây. moodLevel → opacity + scale (cây vui sáng, cây buồn héo).
  */
 export function Flower({ moodLevel, plantType, size = 32 }: FlowerProps) {
   const visual = getMoodVisual(moodLevel);
+  const renderSize = size * visual.scale;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          width: size,
-          height: size,
-          backgroundColor: visual.bgColor,
-          opacity: visual.opacity,
-        },
-      ]}
-    >
-      <Text
-        style={{
-          fontSize: size * 0.65 * visual.scale,
-        }}
-      >
-        {PLANT_EMOJI[plantType]}
-      </Text>
+    <View style={[styles.container, { width: size, height: size, opacity: visual.opacity }]}>
+      <SvgXml xml={PLANT_SVG[plantType]} width={renderSize} height={renderSize} />
     </View>
   );
 }
@@ -41,7 +42,6 @@ export function Flower({ moodLevel, plantType, size = 32 }: FlowerProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.full,
+    justifyContent: 'flex-end',
   },
 });

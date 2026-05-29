@@ -1,10 +1,20 @@
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, Ellipse, LinearGradient, Path, Line, Stop, Rect } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, Path, Line, Stop, Rect, SvgXml } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { Flower } from './Flower';
 import type { PlantType } from '../mapping';
 import { WEATHER_CONFIGS, type WeatherTheme } from '../weather';
+import {
+  SVG_BIRD,
+  SVG_CLOUD,
+  SVG_CLOUD2,
+  SVG_HOUSE,
+  SVG_SHEEP,
+  SVG_SNOWMAN,
+  SVG_SUN,
+  SVG_TREE,
+} from '../gardenAssets';
 import type { MoodEntry } from '@/features/mood/types';
 import { colors, typography } from '@/lib/theme';
 
@@ -186,19 +196,21 @@ export function IsometricGarden({
         </View>
       </View>
 
-      {/* Sun — chỉ sunny */}
+      {/* Sun — chỉ sunny (SVG twemoji) */}
       {wx.showSun ? (
-        <Text style={[styles.deco, { left: S(330), top: S(141), fontSize: S(72) }]}>☀️</Text>
+        <View style={[styles.deco, { left: S(330), top: S(141) }]}>
+          <SvgXml xml={SVG_SUN} width={S(90)} height={S(90)} />
+        </View>
       ) : null}
-      {/* Clouds — theme-aware emoji */}
-      <Text style={[styles.deco, { left: S(21), top: S(140), fontSize: S(90) }]}>
-        {theme === 'snowy' ? '🌨️' : theme === 'rainy' ? '🌧️' : '☁️'}
-      </Text>
-      <Text style={[styles.deco, { left: S(305), top: S(225), fontSize: S(72) }]}>
-        {theme === 'snowy' ? '🌨️' : theme === 'rainy' ? '🌧️' : '☁️'}
-      </Text>
+      {/* Clouds (SVG fxemoji + twemoji) */}
+      <View style={[styles.deco, { left: S(21), top: S(123) }]}>
+        <SvgXml xml={SVG_CLOUD} width={S(138)} height={S(138)} />
+      </View>
+      <View style={[styles.deco, { left: S(301), top: S(213) }]}>
+        <SvgXml xml={SVG_CLOUD2} width={S(112)} height={S(112)} />
+      </View>
 
-      {/* Particles — snow / rain scattered */}
+      {/* Particles — snow / rain scattered (emoji nhỏ, OK) */}
       {wx.particle !== 'none'
         ? PARTICLE_POSITIONS.map((pos, i) => (
             <Text
@@ -293,14 +305,27 @@ export function IsometricGarden({
         })}
       </View>
 
-      {/* Bird trên rìa plot */}
-      <Text style={[styles.deco, { left: S(353), top: S(372), fontSize: S(34) }]}>🐦</Text>
+      {/* Bird trên rìa plot (SVG noto:bird) */}
+      <View style={[styles.deco, { left: S(353), top: S(379) }]}>
+        <SvgXml xml={SVG_BIRD} width={S(44)} height={S(44)} />
+      </View>
 
-      {/* House trên hill */}
-      <Text style={[styles.deco, { left: S(350), top: S(508), fontSize: S(40) }]}>🏠</Text>
+      {/* Tree + House trên hill phải (SVG noto) */}
+      <View style={[styles.deco, { left: S(330), top: S(478) }]}>
+        <SvgXml xml={SVG_TREE} width={S(54)} height={S(54)} />
+      </View>
+      <View style={[styles.deco, { left: S(352), top: S(500) }]}>
+        <SvgXml xml={SVG_HOUSE} width={S(56)} height={S(56)} />
+      </View>
 
-      {/* Character trên hill — sheep (sunny/cloudy/rainy) hoặc snowman (snowy) */}
-      <Text style={[styles.deco, { left: S(35), top: S(575), fontSize: S(60) }]}>{wx.character}</Text>
+      {/* Character trên hill trái — sheep (sunny/cloudy/rainy) hoặc snowman (snowy) */}
+      <View style={[styles.deco, { left: S(35), top: S(565) }]}>
+        <SvgXml
+          xml={theme === 'snowy' ? SVG_SNOWMAN : SVG_SHEEP}
+          width={S(80)}
+          height={S(80)}
+        />
+      </View>
     </View>
   );
 }
