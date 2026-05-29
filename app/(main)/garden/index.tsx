@@ -13,9 +13,11 @@ import {
   subMonths,
 } from 'date-fns';
 import { IsometricGarden } from '@/features/garden/components/IsometricGarden';
+import { WeatherPicker } from '@/features/garden/components/WeatherPicker';
 import { useMonthMoodEntries } from '@/features/garden/hooks';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
-import { useInventory } from '@/features/inventory/hooks';
+import { normalizeTheme, type WeatherTheme } from '@/features/garden/weather';
+import { useInventory, useUpdateActiveTheme } from '@/features/inventory/hooks';
 import { usePulsesInRange } from '@/features/pulse/hooks';
 import { PlantSwitcher } from '@/features/profile/components/PlantSwitcher';
 import { useUser } from '@/features/auth/store';
@@ -84,10 +86,17 @@ export default function GardenScreen() {
 
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
+  const activeTheme = normalizeTheme(inventoryQuery.data?.active_theme);
+  const updateTheme = useUpdateActiveTheme();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [weatherOpen, setWeatherOpen] = useState(false);
 
   const onCellPress = (date: string) => {
     router.push({ pathname: '/garden/[date]', params: { date } });
+  };
+
+  const onSelectTheme = (theme: WeatherTheme) => {
+    if (user) updateTheme.mutate({ userId: user.id, theme });
   };
 
   return (
@@ -102,14 +111,24 @@ export default function GardenScreen() {
           daysInMonth={daysInMonth}
           entries={enhancedEntries}
           plantType={activePlant}
+          theme={activeTheme}
           topInset={insets.top}
           isAtCurrentMonth={isAtCurrentMonth}
           onCellPress={onCellPress}
           onPlantPress={() => setPickerOpen(true)}
+          onWeatherPress={() => setWeatherOpen(true)}
           onPrevMonth={() => setViewDate((d) => subMonths(d, 1))}
           onNextMonth={() => !isAtCurrentMonth && setViewDate((d) => addMonths(d, 1))}
         />
       </ScrollView>
+
+      {/* Weather picker modal */}
+      <WeatherPicker
+        visible={weatherOpen}
+        current={activeTheme}
+        onClose={() => setWeatherOpen(false)}
+        onSelect={onSelectTheme}
+      />
 
       {/* Plant picker modal */}
       <Modal

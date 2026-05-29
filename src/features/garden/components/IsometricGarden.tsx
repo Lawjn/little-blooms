@@ -4,6 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { Flower } from './Flower';
 import type { PlantType } from '../mapping';
+import { WEATHER_CONFIGS, type WeatherTheme } from '../weather';
 import type { MoodEntry } from '@/features/mood/types';
 import { colors, typography } from '@/lib/theme';
 
@@ -39,6 +40,20 @@ const ROWS = 6;
 const COLS = 6;
 const TOTAL_CELLS = ROWS * COLS;
 
+// Vị trí scatter cho snow/rain particles (Figma coords trong 430-width canvas)
+const PARTICLE_POSITIONS = [
+  { x: 50, y: 280, size: 22 },
+  { x: 300, y: 290, size: 20 },
+  { x: 30, y: 420, size: 18 },
+  { x: 340, y: 430, size: 22 },
+  { x: 130, y: 500, size: 16 },
+  { x: 250, y: 470, size: 20 },
+  { x: 80, y: 350, size: 16 },
+  { x: 370, y: 350, size: 18 },
+  { x: 180, y: 250, size: 16 },
+  { x: 320, y: 530, size: 18 },
+];
+
 interface IsometricGardenProps {
   monthStart: Date;
   daysInMonth: number;
@@ -46,10 +61,12 @@ interface IsometricGardenProps {
   plantType: PlantType;
   onCellPress?: (date: string) => void;
   onPlantPress?: () => void;
+  onWeatherPress?: () => void;
   onPrevMonth?: () => void;
   onNextMonth?: () => void;
   isAtCurrentMonth?: boolean;
   topInset?: number; // safe area top
+  theme?: WeatherTheme;
 }
 
 // Map (row, col) → point trong plot viewBox
@@ -100,14 +117,17 @@ export function IsometricGarden({
   plantType,
   onCellPress,
   onPlantPress,
+  onWeatherPress,
   onPrevMonth,
   onNextMonth,
   isAtCurrentMonth,
   topInset = 0,
+  theme = 'sunny',
 }: IsometricGardenProps) {
   const { width: screenW } = useWindowDimensions();
   const scale = screenW / FIGMA_W;
   const S = (v: number) => v * scale;
+  const wx = WEATHER_CONFIGS[theme];
 
   const entryByDate = new Map<string, MoodEntry>();
   for (const e of entries) entryByDate.set(e.entry_date, e);
@@ -125,52 +145,70 @@ export function IsometricGarden({
       <Svg width={screenW} height={S(FIGMA_H)} style={StyleSheet.absoluteFill}>
         <Defs>
           <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#9EE5FF" />
-            <Stop offset="1" stopColor="#C8F0FF" />
+            <Stop offset="0" stopColor={wx.skyTop} />
+            <Stop offset="1" stopColor={wx.skyBottom} />
           </LinearGradient>
         </Defs>
         {/* Header bar */}
         <Rect x={0} y={0} width={screenW} height={S(131)} fill="#78C9E6" />
         {/* Sky */}
         <Rect x={0} y={S(128)} width={screenW} height={S(FIGMA_H - 128)} fill="url(#sky)" />
-        {/* Hills — back (darker) + front (lighter) */}
+        {/* Hills — back (darker) + front (lighter) — theme-aware */}
         <Ellipse
           cx={S(-188 + 548 / 2)}
           cy={S(637 + 408 / 2)}
           rx={S(548 / 2)}
           ry={S(408 / 2)}
-          fill="#75A843"
+          fill={wx.hillBack}
         />
         <Ellipse
           cx={S(124 + 548 / 2)}
           cy={S(631 + 408 / 2)}
           rx={S(548 / 2)}
           ry={S(408 / 2)}
-          fill="#83BF4F"
+          fill={wx.hillFront}
         />
       </Svg>
 
-      {/* Header: Garden title + icons */}
+      {/* Header: Garden title + icons (plain white — match Figma) */}
       <View style={[styles.headerBar, { top: topInset + S(8), width: screenW, paddingHorizontal: S(24) }]}>
         <Text style={[styles.headerTitle, { fontSize: S(24) }]}>Garden</Text>
         <View style={styles.headerIcons}>
-          <Pressable onPress={onPlantPress} hitSlop={8} style={styles.headerIconBtn}>
-            <MaterialCommunityIcons name="flower-tulip" size={S(22)} color={colors.white} />
+          <Pressable onPress={onPlantPress} hitSlop={10}>
+            <MaterialCommunityIcons name="flower-tulip" size={S(26)} color={colors.white} />
           </Pressable>
-          <Pressable hitSlop={8} style={styles.headerIconBtn}>
-            <MaterialCommunityIcons name="weather-partly-cloudy" size={S(22)} color={colors.white} />
+          <Pressable onPress={onWeatherPress} hitSlop={10}>
+            <MaterialCommunityIcons name="weather-partly-cloudy" size={S(26)} color={colors.white} />
           </Pressable>
-          <Pressable hitSlop={8} style={styles.headerIconBtn}>
-            <MaterialCommunityIcons name="music" size={S(22)} color={colors.white} />
+          <Pressable hitSlop={10}>
+            <MaterialCommunityIcons name="music" size={S(26)} color={colors.white} />
           </Pressable>
         </View>
       </View>
 
-      {/* Sun */}
-      <Text style={[styles.deco, { left: S(330), top: S(141), fontSize: S(72) }]}>☀️</Text>
-      {/* Clouds */}
-      <Text style={[styles.deco, { left: S(21), top: S(140), fontSize: S(90) }]}>☁️</Text>
-      <Text style={[styles.deco, { left: S(305), top: S(225), fontSize: S(72) }]}>☁️</Text>
+      {/* Sun — chỉ sunny */}
+      {wx.showSun ? (
+        <Text style={[styles.deco, { left: S(330), top: S(141), fontSize: S(72) }]}>☀️</Text>
+      ) : null}
+      {/* Clouds — theme-aware emoji */}
+      <Text style={[styles.deco, { left: S(21), top: S(140), fontSize: S(90) }]}>
+        {theme === 'snowy' ? '🌨️' : theme === 'rainy' ? '🌧️' : '☁️'}
+      </Text>
+      <Text style={[styles.deco, { left: S(305), top: S(225), fontSize: S(72) }]}>
+        {theme === 'snowy' ? '🌨️' : theme === 'rainy' ? '🌧️' : '☁️'}
+      </Text>
+
+      {/* Particles — snow / rain scattered */}
+      {wx.particle !== 'none'
+        ? PARTICLE_POSITIONS.map((pos, i) => (
+            <Text
+              key={i}
+              style={[styles.deco, { left: S(pos.x), top: S(pos.y), fontSize: S(pos.size) }]}
+            >
+              {wx.particle === 'snow' ? '❄️' : '💧'}
+            </Text>
+          ))
+        : null}
 
       {/* Date range + month nav + plant count */}
       <View style={[styles.headerRow, { top: S(132), width: screenW }]}>
@@ -261,8 +299,8 @@ export function IsometricGarden({
       {/* House trên hill */}
       <Text style={[styles.deco, { left: S(350), top: S(508), fontSize: S(40) }]}>🏠</Text>
 
-      {/* Sheep trên hill */}
-      <Text style={[styles.deco, { left: S(35), top: S(575), fontSize: S(60) }]}>🐑</Text>
+      {/* Character trên hill — sheep (sunny/cloudy/rainy) hoặc snowman (snowy) */}
+      <Text style={[styles.deco, { left: S(35), top: S(575), fontSize: S(60) }]}>{wx.character}</Text>
     </View>
   );
 }
