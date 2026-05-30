@@ -8,8 +8,10 @@
 // Secret:  Dashboard → Edge Functions → Manage secrets → thêm GEMINI_API_KEY.
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+// Đổi model ở đây nếu key không có free quota cho model hiện tại.
+// Các lựa chọn free phổ biến: gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-1.5-flash';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
