@@ -3,8 +3,8 @@
 > Single source of truth về tiến độ build. Tick `[x]` ngay khi sub-task xong.
 > Mỗi phase có file chi tiết ở `docs/phases/phase-N-*.md`.
 
-**Last updated**: 2026-05-07
-**Current phase**: Quick Wins #2 — Photo Gallery + Image speed [✅ DONE pending user verify]
+**Last updated**: 2026-05-30
+**Current phase**: Garden pixel-perfect + Watering streak feature [🟡 IN PROGRESS pending user verify]
 **Phase 7 status**: ✅ DONE.
 
 **User cần apply migrations theo thứ tự**:
@@ -12,6 +12,10 @@
 - `supabase/migrations/0006_backfill_inventory.sql` — backfill inventory rows
 - `supabase/migrations/0007_inventory_insert_policy.sql` — INSERT policy cho upsert
 - `supabase/migrations/0008_avatar_rls_fix.sql` — fix avatars RLS folder pattern
+- `supabase/migrations/0009_mood_pulses.sql` — quick log pulses table
+- `supabase/migrations/0010_premium_and_unlocks.sql` — premium flag + owned_plants
+- `supabase/migrations/0011_extend_store_type.sql` — extend store_items.type cho 'plant'
+- `supabase/migrations/0012_watering.sql` — last_watered_date + water_streak ⚠️ MỚI
 **Phase 6 status**: ✅ DONE (charts + aggregations, pending user verify).
 **Phase 5 status**: ✅ DONE (calendar + future date guard verified, special icon backlog).
 **Phase 3 status**: ✅ DONE (functional). Visual polish (isometric + SVG flowers) defer Phase 9.
@@ -111,15 +115,30 @@
 
 ---
 
-## Phase 4 — Weather Themes [~ DEFER Phase 9]
-> Visual polish theo nature, gom với isometric + SVG flowers + animations ở Phase 9.
+## Phase 4 — Weather Themes [✅ DONE]
+> Implemented sớm cùng pixel-perfect garden polish (path A).
 
-- [~] 4.1 Theme system (active_theme trong inventory) — defer
-- [~] 4.2 Snowy theme assets + overlay — defer
-- [~] 4.3 Cloudy theme — defer
-- [~] 4.4 Rainy theme — defer
-- [~] 4.5 Theme picker modal — defer
-- [~] 4.6 Locked themes CTA "Buy from Store" — defer
+- [x] 4.1 Theme system (active_theme trong inventory, normalizeTheme guard)
+- [x] 4.2 Snowy theme (sky lạnh, hills xám, particles trắng, snowman thay sheep)
+- [x] 4.3 Cloudy theme (sky xám, mây dày, sun mờ)
+- [x] 4.4 Rainy theme (sky xám đậm, particles line nghiêng)
+- [x] 4.5 `WeatherPicker` modal "Choose your weather" với 4 options
+- [~] 4.6 Locked themes CTA — defer (hiện tại all themes free, sẽ wire khi Phase 8 Store)
+
+---
+
+## Garden pixel-perfect + Watering [🟡 IN PROGRESS]
+> Phase phụ — pixel-perfect theo Figma + daily streak watering action.
+
+- [x] G.1 Real Figma SVG assets từ Iconify (sun, clouds, bird, sheep, house, tree, snowman, flowers, watering-can)
+- [x] G.2 `IsometricGarden.tsx` — virtual canvas 430×932 scale, rhombus plot path từ Figma, 6×6 isometric grid, bilinear cell→point
+- [x] G.3 Weather theme system (`weather.ts` + `WeatherPicker.tsx`) wired vào garden
+- [x] G.4 Watering migration `0012_watering.sql` (last_watered_date + water_streak)
+- [x] G.5 `waterPlant` API + `useWaterPlant` hook (1 lần/ngày, streak +1 nếu liên tục)
+- [x] G.6 `SinglePlantScene.tsx` — single-plant garden view cho Garden info detail (rhombus tile + plant + watering can + pour animation)
+- [x] G.7 Rewrite `garden/[date].tsx` dùng SinglePlantScene hero + detail cards bên dưới + Toast feedback
+- [ ] G.8 User apply migration 0012 + verify watering flow end-to-end
+- [ ] G.9 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
 
 ---
 

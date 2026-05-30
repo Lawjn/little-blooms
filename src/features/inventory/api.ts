@@ -8,6 +8,8 @@ export interface UserInventory {
   active_theme: string;
   active_plant: PlantType;
   owned_plants: PlantType[];
+  last_watered_date: string | null;
+  water_streak: number;
   updated_at: string;
 }
 
@@ -114,6 +116,58 @@ export async function fakePurchaseSeeds(params: {
   });
 
   return updated;
+}
+
+/**
+ * Tưới cây — daily streak action. Chỉ tưới được 1 lần/ngày.
+ * Tăng water_streak (consecutive days), set last_watered_date = today.
+ * Trả về { inventory, alreadyWatered } — alreadyWatered=true nếu đã tưới hôm nay.
+ */
+export async function waterPlant(params: { userId: string; todayStr: string }) {
+  const current = await getInventory(params.userId);
+  if (current?.last_watered_date === params.todayStr) {
+    return { inventory: current, alreadyWatered: true };
+  }
+
+  // Streak: nếu last_watered = hôm qua → +1, else reset về 1
+  let newStreak = 1;
+  if (current?.last_watered_date) {
+    const last = new Date(current.last_watered_date);
+    const today = new Date(params.todayStr);
+    const diffDays = Math.round((today.getTime() - last.getTime()) / 86400000);
+    newStreak = diffDays === 1 ? current.water_streak + 1 : 1;
+  }
+
+  const { data, error } = await supabase
+    .from('user_inventory')
+    .upsert(
+      {
+        user_id: params.userId,
+        last_watered_date: params.todayStr,
+        water_streak: newStreak,
+      },
+      { onConflict: 'user_id' },
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return { inventory: data as UserInventory, alreadyWatered: false };
+}
+
+/**
+ * Đổi weather theme cho garden (sunny/cloudy/rainy/snowy).
+ */
+export async function updateActiveTheme(params: { userId: string; theme: string }) {
+  const { data, error } = await supabase
+    .from('user_inventory')
+    .upsert(
+      { user_id: params.userId, active_theme: params.theme },
+      { onConflict: 'user_id' },
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data as UserInventory;
 }
 
 /**

@@ -6,6 +6,8 @@ import {
   setPremium,
   unlockPlant,
   updateActivePlant,
+  updateActiveTheme,
+  waterPlant,
 } from './api';
 
 const inventoryKeys = {
@@ -55,6 +57,26 @@ export function useFakePurchaseSeeds() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fakePurchaseSeeds,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.detail(data.user_id) });
+    },
+  });
+}
+
+export function useWaterPlant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: waterPlant,
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.detail(result.inventory.user_id) });
+    },
+  });
+}
+
+export function useUpdateActiveTheme() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateActiveTheme,
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: inventoryKeys.detail(data.user_id) });
     },

@@ -95,3 +95,41 @@ app/(main)/profile.tsx        # Placeholder cho Phase 7
 ## Started at
 
 2026-05-06
+
+---
+
+## Pixel-perfect upgrade + Watering feature (2026-05-30)
+
+### Context
+Thầy yêu cầu garden phải match Figma 100%. User chọn **path A**: real SVG assets từ Iconify (Figma dùng Iconify icon sets) + virtual canvas 430×932 scale theo screenWidth + absolute positioning theo Figma coords. Sau khi load xong full garden, user gửi 3 screenshot mới về Garden info detail (single-plant view + watering can).
+
+### What was built
+
+**Files created:**
+- `src/features/garden/gardenAssets.ts` — SVG strings (SVG_SUN, SVG_CLOUD, SVG_CLOUD2, SVG_BIRD, SVG_SUNFLOWER, SVG_ROSE, SVG_TULIP, SVG_CLOVER, SVG_CHERRY, SVG_SHEEP, SVG_HOUSE, SVG_TREE, SVG_SNOWMAN, SVG_WATERING_CAN) downloaded từ Iconify API (twemoji/noto/fxemoji/mdi).
+- `src/features/garden/weather.ts` — `WeatherTheme` type + `WEATHER_CONFIGS` (sky/hills/sun/clouds/particle/character per theme) + `normalizeTheme()` guard + `WEATHER_OPTIONS` list.
+- `src/features/garden/components/IsometricGarden.tsx` — pixel-perfect main garden scene (rhombus plot path, bilinear cell→point, 6×6 = 36 cells, sky LinearGradient, hills, sun/clouds/bird/sheep/house/tree/snowman SVG, snow/rain particles, month nav header).
+- `src/features/garden/components/WeatherPicker.tsx` — "Choose your weather" modal với 4 options.
+- `src/features/garden/components/SinglePlantScene.tsx` — single-plant scene cho Garden info detail (rhombus tile + plant mọc lên + sheep/house/tree + watering can button + pour animation).
+- `supabase/migrations/0012_watering.sql` — `last_watered_date date` + `water_streak integer default 0` columns.
+
+**Files modified:**
+- `src/features/garden/mapping.ts` — added `PlantType`, `MOOD_VISUAL` per level (bgColor/opacity/scale), `getMoodVisual()`.
+- `src/features/garden/components/Flower.tsx` — use `SvgXml` với `PLANT_SVG` map, scale + opacity theo mood.
+- `src/features/inventory/api.ts` — `UserInventory` interface +last_watered_date+water_streak, new `waterPlant(userId, todayStr)` function (1 lần/ngày, streak +1 nếu liên tục, reset về 1 nếu skip).
+- `src/features/inventory/hooks.ts` — `useWaterPlant` mutation invalidate inventory query.
+- `app/(main)/garden/index.tsx` — sử dụng IsometricGarden + WeatherPicker modal + month nav.
+- `app/(main)/garden/[date].tsx` — rewrite: SinglePlantScene hero ở trên + detail cards (mood label + tag sections + note + photos + pulses) bên dưới. Handle `handleWater()` qua mutation + Toast feedback. Back button overlay.
+
+### Decisions
+- **Iconify thay Figma export**: User không export được PNG/SVG từ Figma Starter plan. Iconify cung cấp đúng exact icons mà Figma dùng (twemoji, noto, mdi). Download qua API: `https://api.iconify.design/{prefix}/{name}.svg`.
+- **Virtual canvas 430×932**: Figma frame width = 430. Scale tất cả positioning bằng `S(v) = v * screenW / 430` — pixel-perfect responsive.
+- **Watering = daily streak action**: Mỗi ngày user tap watering can → +1 streak. Skip 1 ngày → reset về 1. Lưu `last_watered_date` chỉ cho phép 1 lần/ngày (UI lock + API guard).
+- **Watering UI chỉ hiện khi `isToday`**: Quá khứ không thể water (không hợp lý), tương lai không nên water (chưa tới ngày).
+- **Pour animation**: 1.1s droplet emoji 💧💧 translateY + opacity interpolate, callback gọi mutation sau khi animation xong → cảm giác mượt.
+
+### Issues encountered
+- **Tôi không thể xem render của chính mình**: Lặp lại pattern phải xin screenshot từ user mỗi lần tinh chỉnh pixel position. User accept vì là môn coursework có thể iterate.
+- **TILE_VB viewBox cho rhombus**: rhombus full size = 381.857×227.82 (từ Figma plot path), nhưng cần thêm space dưới cho 3D depth layers (#865A3D, #947151) → viewBox height = TILE_VB + 40.
+
+### Status: 🟡 IN PROGRESS — pending user apply migration 0012 + verify watering flow + gửi screenshot fine-tuning.
