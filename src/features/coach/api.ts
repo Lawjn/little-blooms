@@ -1,3 +1,4 @@
+import { FunctionsHttpError, FunctionsFetchError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { ChatMessage } from './types';
 
@@ -18,7 +19,29 @@ export async function sendCoachMessage(params: {
 
   if (error) {
     console.warn('[ai-coach] invoke error:', error);
-    throw new Error('Không gọi được AI. Kiểm tra kết nối mạng hoặc thử lại sau.');
+
+    // Function chạy nhưng trả lỗi (4xx/5xx) → đọc chi tiết để debug
+    if (error instanceof FunctionsHttpError) {
+      let detail = '';
+      try {
+        const body = await error.context.json();
+        detail = body?.detail ?? body?.error ?? '';
+      } catch {
+        /* không đọc được body */
+      }
+      throw new Error(
+        detail ? `Lỗi AI: ${detail}` : `Lỗi AI (HTTP ${error.context?.status ?? '?'}).`,
+      );
+    }
+
+    // Không gọi tới được function (chưa deploy / sai tên / mạng)
+    if (error instanceof FunctionsFetchError) {
+      throw new Error(
+        'Không kết nối được tới function "ai-coach". Kiểm tra đã deploy đúng tên chưa + mạng.',
+      );
+    }
+
+    throw new Error(`Không gọi được AI: ${error.message}`);
   }
 
   const reply = (data as { reply?: string } | null)?.reply;
