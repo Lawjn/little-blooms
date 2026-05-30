@@ -161,9 +161,11 @@
 - [x] AI.3 Màn chat `app/(main)/coach.tsx` (bubble UI, typing indicator, input bar, disclaimer)
 - [x] AI.4 Entry point: nút chatbubble ở header Home → `/coach`. Route hidden trong tab layout.
 - [x] AI.5 `tsconfig.json` exclude `supabase/functions` (Deno type riêng)
-- [ ] AI.6 **User deploy**: tạo Edge Function `ai-coach` trên Dashboard + set secret `GEMINI_API_KEY` (hướng dẫn step-by-step)
-- [ ] AI.7 Verify chat end-to-end trên thiết bị thật
-- [ ] AI.8 (sau) User rotate Gemini key (đã lộ trong chat)
+- [x] AI.6 User đã deploy Edge Function `ai-coach` (chat UI chạy, gọi tới được AI)
+- [x] AI.7 **Đổi Gemini → Groq + Llama 3.3**: key Gemini trả 429 limit:0 (không có free quota). Groq free tier rộng, không cần billing, API chuẩn OpenAI.
+- [ ] AI.8 **User**: set secret `GROQ_API_KEY` (lấy ở console.groq.com) + re-deploy function
+- [ ] AI.9 Verify chat end-to-end trên thiết bị thật
+- [ ] AI.10 (sau) User rotate key (đã lộ trong chat)
 
 ---
 

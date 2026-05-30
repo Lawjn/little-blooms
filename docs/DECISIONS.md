@@ -12,7 +12,7 @@
 
 **Decision**:
 - **Plan A — gọi cloud AI API**, KHÔNG self-train/self-host (tốn server GPU, cần dataset, lệch scope đồ án).
-- Chọn **Google Gemini 2.0 Flash** (model đóng): tiếng Việt tốt nhất, free tier rộng (~1500 req/ngày), dễ tích hợp. Không lock-in vì bọc trong Edge Function.
+- ~~Gemini 2.0 Flash~~ → **Đổi sang Groq + Llama 3.3 70B** (model mã nguồn mở). Lý do: key Gemini của user trả `429 limit:0` (không có free quota cho model đó trên account này). Groq cho free tier rộng, không cần billing, API chuẩn OpenAI. Không lock-in vì bọc trong Edge Function (đổi provider chỉ sửa 1 file).
 - **KHÔNG cần đổi DB sang NoSQL/vector** — data đã structured, chỉ gửi text summary 7 ngày gần nhất làm context. (Supabase Postgres có sẵn pgvector nếu sau cần.)
 - **Bảo mật key**: GEMINI_API_KEY lưu làm **Edge Function secret** (server-side), client gọi qua `supabase.functions.invoke('ai-coach')`. Key KHÔNG bao giờ vào app bundle / không commit.
 - **Guardrail an toàn**: system prompt giới hạn vai trò (không phải bác sĩ/trị liệu); nếu user có dấu hiệu khủng hoảng → khuyên tìm người thân/chuyên gia. safetySettings = BLOCK_ONLY_HIGH để model vẫn đồng hành khi user chia sẻ chuyện buồn.

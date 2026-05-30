@@ -1,17 +1,19 @@
 // Supabase Edge Function: "ai-coach"
 // "Bloom" — người bạn AI: check-in cảm xúc + lời khuyên điều chỉnh lifestyle.
 //
-// Bảo mật: GEMINI_API_KEY lưu làm SECRET của Edge Function (không nằm trong app).
+// Dùng GROQ (chạy model mã nguồn mở Llama 3.3) — free tier rộng, không cần billing.
+// API theo chuẩn OpenAI chat completions.
+//
+// Bảo mật: GROQ_API_KEY lưu làm SECRET của Edge Function (không nằm trong app).
 // Client gọi qua supabase.functions.invoke('ai-coach', { body: { messages, moodContext } }).
 //
-// Deploy: Supabase Dashboard → Edge Functions → tạo function tên "ai-coach" → paste file này.
-// Secret:  Dashboard → Edge Functions → Manage secrets → thêm GEMINI_API_KEY.
+// Deploy: Supabase Dashboard → Edge Functions → function "ai-coach" → paste file này → Deploy.
+// Secret:  Dashboard → Edge Functions → Secrets → thêm GROQ_API_KEY (lấy ở console.groq.com).
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
-// Đổi model ở đây nếu key không có free quota cho model hiện tại.
-// Các lựa chọn free phổ biến: gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-lite
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-1.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? '';
+// Model mở chạy trên Groq. Đổi tại đây nếu cần (vd llama-3.1-8b-instant cho nhanh hơn).
+const GROQ_MODEL = Deno.env.get('GROQ_MODEL') ?? 'llama-3.3-70b-versatile';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +29,7 @@ VAI TRÒ CỦA BẠN:
 - Đưa ra LỜI KHUYÊN cụ thể, dễ làm để điều chỉnh lối sống tích cực hơn: ăn uống, vận động, ngủ nghỉ, uống nước, dành thời gian cho bản thân, hoặc kết nối với người thân/bạn bè.
 
 PHONG CÁCH:
-- Trả lời bằng TIẾNG VIỆT, ấm áp, gần gũi như một người bạn thật sự quan tâm. Có thể dùng emoji nhẹ nhàng (🌱🌸💛) nhưng đừng lạm dụng.
+- LUÔN trả lời bằng TIẾNG VIỆT, ấm áp, gần gũi như một người bạn thật sự quan tâm. Có thể dùng emoji nhẹ nhàng (🌱🌸💛) nhưng đừng lạm dụng.
 - NGẮN GỌN: thường 2–5 câu. Mỗi lượt kết thúc bằng MỘT câu hỏi mở để duy trì trò chuyện.
 - Không thuyết giáo, không liệt kê máy móc, không phán xét. Khen ngợi những nỗ lực nhỏ.
 
@@ -55,8 +57,8 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return json({ error: 'Chỉ hỗ trợ POST' }, 405);
   }
-  if (!GEMINI_API_KEY) {
-    return json({ error: 'Server chưa cấu hình GEMINI_API_KEY' }, 500);
+  if (!GROQ_API_KEY) {
+    return json({ error: 'Server chưa cấu hình GROQ_API_KEY' }, 500);
   }
 
   try {
@@ -73,52 +75,36 @@ Deno.serve(async (req: Request) => {
       ? `${SYSTEM_PROMPT}\n\n--- Dữ liệu cảm xúc gần đây của người dùng (tham khảo để cá nhân hoá, đừng đọc lại máy móc) ---\n${moodContext}`
       : SYSTEM_PROMPT;
 
-    // Chỉ giữ 20 lượt gần nhất để gọn context
-    const contents = messages.slice(-20).map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
-    // Gemini yêu cầu lượt đầu tiên phải là 'user' → bỏ các lượt 'model' dẫn đầu
-    // (ví dụ câu chào mở đầu do app tự seed).
-    while (contents.length && contents[0].role === 'model') contents.shift();
-    if (contents.length === 0) {
-      return json({ error: 'Chưa có nội dung từ người dùng' }, 400);
-    }
+    // Chuẩn OpenAI: system trước, rồi 20 lượt gần nhất
+    const groqMessages = [
+      { role: 'system', content: systemText },
+      ...messages.slice(-20).map((m) => ({ role: m.role, content: m.content })),
+    ];
 
-    const body = {
-      systemInstruction: { parts: [{ text: systemText }] },
-      contents,
-      generationConfig: { temperature: 0.85, topP: 0.95, maxOutputTokens: 600 },
-      // Nới safety để model vẫn đồng hành khi user chia sẻ chuyện buồn,
-      // thay vì từ chối trả lời. Nội dung thật sự nguy hiểm vẫn bị chặn (HIGH).
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-      ],
-    };
-
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+    const res = await fetch(GROQ_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: groqMessages,
+        temperature: 0.85,
+        max_tokens: 600,
+        top_p: 0.95,
+      }),
     });
 
     if (!res.ok) {
       const detail = await res.text();
-      return json({ error: 'Gemini API lỗi', detail }, 502);
+      return json({ error: 'Groq API lỗi', detail }, 502);
     }
 
     const data = await res.json();
-    const reply: string =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p: { text?: string }) => p.text ?? '')
-        .join('')
-        .trim() ?? '';
+    const reply: string = data?.choices?.[0]?.message?.content?.trim() ?? '';
 
     if (!reply) {
-      // Bị safety chặn hoặc trả rỗng
       return json({
         reply:
           'Mình ở đây với bạn nè. Có vẻ điều bạn đang trải qua khá nặng — nếu được, hãy chia sẻ với một người thân mà bạn tin tưởng nhé. Bạn muốn kể thêm cho mình nghe không? 💛',
