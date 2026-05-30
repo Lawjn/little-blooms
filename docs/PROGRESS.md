@@ -143,8 +143,11 @@
 - [x] G.11 User đã apply migration 0012 ✅
 - [x] G.12 **Đổi chức năng bình tưới**: bỏ giới hạn 1 lần/ngày → mỗi lần tưới hiện 1 câu an ủi/động viên ngẫu nhiên (`wateringQuotes.ts` 30 câu + `WateringQuoteModal`). DB streak/lock bỏ (waterPlant/useWaterPlant thành dead code, giữ lại không hại).
 - [x] G.13 Dịch Quick pulse → tiếng Việt (QuickLogModal, DecisionScreen, home, garden/[date])
-- [ ] G.14 Verify watering quote flow + tab FAB + pulse tiếng Việt (chờ screenshot)
-- [ ] G.15 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
+- [x] G.14 Bình tưới ngoài vườn → navigate vào màn cây hoa hôm nay (không hiện quote ở ngoài). Hôm nay luôn hiện cây dù chưa log (mood mặc định 3).
+- [x] G.15 Hiệu ứng tưới: bình tưới **nghiêng + rót nước xuống cây** (canRotate -42deg + giọt nước loop + cây nảy nhẹ) thay vì giọt tự rơi. Quote hiện sau khi rót xong.
+- [x] G.16 Fix overlap nhà/bình tưới ở SinglePlantScene (nhà+cây dời lên bottom 132/150, bình tưới góc dưới phải bottom 20)
+- [ ] G.17 Verify toàn bộ watering UX + pulse tiếng Việt (chờ screenshot)
+- [ ] G.18 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
 
 ---
 

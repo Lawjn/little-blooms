@@ -51,41 +51,72 @@ export function SinglePlantScene({
   const S = (v: number) => v * scale;
   const wx = WEATHER_CONFIGS[theme];
 
-  // Tile: render ~30% screen width, centered
+  // Tile: render ~42% screen width, centered
   const tileW = screenW * 0.42;
   const tileScale = tileW / TILE_VB;
   const tileH = TILE_VB * tileScale + 14;
   const tileLeft = (screenW - tileW) / 2;
   const tileTop = height * 0.42;
 
-  // Water pour animation
-  const dropAnim = useRef(new Animated.Value(0)).current;
+  // Toạ độ cây (để đặt bình tưới rót nước đúng chỗ)
+  const plantCenterX = tileLeft + tileW / 2;
+  const plantTopY = tileTop - tileW * 0.34;
+
+  // Water pour animation: bình tưới nghiêng + giọt nước rơi xuống cây
+  const tilt = useRef(new Animated.Value(0)).current; // 0 = thẳng, 1 = nghiêng rót
+  const stream = useRef(new Animated.Value(0)).current; // loop giọt nước
+  const plantBounce = useRef(new Animated.Value(0)).current;
   const [pouring, setPouring] = useState(false);
+  const streamLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const triggerWater = () => {
     if (!isToday || pouring) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     setPouring(true);
-    dropAnim.setValue(0);
-    Animated.timing(dropAnim, {
-      toValue: 1,
-      duration: 1100,
-      useNativeDriver: true,
-    }).start(() => {
+    tilt.setValue(0);
+    stream.setValue(0);
+
+    // Loop giọt nước trong lúc nghiêng
+    const loop = Animated.loop(
+      Animated.timing(stream, { toValue: 1, duration: 460, useNativeDriver: true }),
+      { iterations: 3 },
+    );
+    streamLoopRef.current = loop;
+    loop.start();
+
+    // Bình tưới nghiêng → giữ → trả lại
+    Animated.sequence([
+      Animated.timing(tilt, { toValue: 1, duration: 320, useNativeDriver: true }),
+      Animated.delay(900),
+      Animated.timing(tilt, { toValue: 0, duration: 280, useNativeDriver: true }),
+    ]).start(() => {
+      loop.stop();
+      stream.setValue(0);
+      // Cây nảy nhẹ "uống nước"
+      Animated.sequence([
+        Animated.timing(plantBounce, { toValue: 1, duration: 160, useNativeDriver: true }),
+        Animated.spring(plantBounce, { toValue: 0, friction: 4, useNativeDriver: true }),
+      ]).start();
       setPouring(false);
       onWater();
     });
   };
 
   useEffect(() => {
-    return () => dropAnim.stopAnimation();
-  }, [dropAnim]);
+    return () => {
+      tilt.stopAnimation();
+      stream.stopAnimation();
+      streamLoopRef.current?.stop();
+    };
+  }, [tilt, stream]);
 
-  const dropTranslateY = dropAnim.interpolate({ inputRange: [0, 1], outputRange: [0, S(80)] });
-  const dropOpacity = dropAnim.interpolate({
-    inputRange: [0, 0.2, 0.8, 1],
+  const canRotate = tilt.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-42deg'] });
+  const streamTranslateY = stream.interpolate({ inputRange: [0, 1], outputRange: [0, S(56)] });
+  const streamOpacity = stream.interpolate({
+    inputRange: [0, 0.15, 0.85, 1],
     outputRange: [0, 1, 1, 0],
   });
+  const plantScale = plantBounce.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
 
   return (
     <View style={[styles.scene, { height }]}>
@@ -114,8 +145,21 @@ export function SinglePlantScene({
       <View style={[styles.deco, { left: S(10), top: topInset + S(70) }]}>
         <SvgXml xml={SVG_CLOUD} width={S(110)} height={S(110)} />
       </View>
-      <View style={[styles.deco, { right: S(30), top: topInset + S(110) }]}>
+      <View style={[styles.deco, { right: S(30), top: topInset + S(150) }]}>
         <SvgXml xml={SVG_CLOUD2} width={S(90)} height={S(90)} />
+      </View>
+
+      {/* Tree + house — đặt cao trên hill, xa khỏi nút bình tưới (góc dưới phải) */}
+      <View style={[styles.deco, { right: S(60), bottom: S(150) }]}>
+        <SvgXml xml={SVG_TREE} width={S(48)} height={S(48)} />
+      </View>
+      <View style={[styles.deco, { right: S(18), bottom: S(132) }]}>
+        <SvgXml xml={SVG_HOUSE} width={S(52)} height={S(52)} />
+      </View>
+
+      {/* Character trái */}
+      <View style={[styles.deco, { left: S(24), bottom: S(40) }]}>
+        <SvgXml xml={theme === 'snowy' ? SVG_SNOWMAN : SVG_SHEEP} width={S(70)} height={S(70)} />
       </View>
 
       {/* Single tile + plant */}
@@ -126,52 +170,55 @@ export function SinglePlantScene({
           <Path d={TILE_PATH} fill="#8FD34A" />
         </Svg>
         {/* Plant centered on tile, mọc lên */}
-        <View
+        <Animated.View
           style={{
             position: 'absolute',
             left: tileW / 2 - tileW * 0.28,
             top: -tileW * 0.34,
             width: tileW * 0.56,
             height: tileW * 0.56,
+            transform: [{ scale: plantScale }],
           }}
         >
           <Flower moodLevel={moodLevel} plantType={plantType} size={tileW * 0.56} />
-        </View>
+        </Animated.View>
       </View>
 
-      {/* Water pour droplets animation */}
+      {/* Pour animation: bình tưới nghiêng + giọt nước rơi xuống cây */}
       {pouring ? (
-        <Animated.View
-          style={{
-            position: 'absolute',
-            left: screenW / 2 - S(10),
-            top: tileTop - S(50),
-            opacity: dropOpacity,
-            transform: [{ translateY: dropTranslateY }],
-          }}
-        >
-          <Text style={{ fontSize: S(24) }}>💧💧</Text>
-        </Animated.View>
+        <>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: plantCenterX - S(14),
+              top: plantTopY - S(54),
+              transform: [{ rotate: canRotate }],
+            }}
+          >
+            <SvgXml xml={SVG_WATERING_CAN} width={S(60)} height={S(60)} />
+          </Animated.View>
+          {[0, 1, 2].map((i) => (
+            <Animated.Text
+              key={i}
+              style={{
+                position: 'absolute',
+                left: plantCenterX - S(26) + i * S(7),
+                top: plantTopY - S(10) + i * S(11),
+                fontSize: S(13),
+                opacity: streamOpacity,
+                transform: [{ translateY: streamTranslateY }],
+              }}
+            >
+              💧
+            </Animated.Text>
+          ))}
+        </>
       ) : null}
 
-      {/* Tree + house trên hill phải */}
-      <View style={[styles.deco, { right: S(45), bottom: S(60) }]}>
-        <SvgXml xml={SVG_TREE} width={S(44)} height={S(44)} />
-      </View>
-      <View style={[styles.deco, { right: S(14), bottom: S(48) }]}>
-        <SvgXml xml={SVG_HOUSE} width={S(48)} height={S(48)} />
-      </View>
-
-      {/* Character trái */}
-      <View style={[styles.deco, { left: S(24), bottom: S(36) }]}>
-        <SvgXml xml={theme === 'snowy' ? SVG_SNOWMAN : SVG_SHEEP} width={S(70)} height={S(70)} />
-      </View>
-
-      {/* Watering can button bottom-right */}
-      {isToday ? (
+      {/* Watering can button bottom-right (ẩn khi đang rót) */}
+      {isToday && !pouring ? (
         <Pressable
           onPress={triggerWater}
-          disabled={pouring}
           style={[styles.canBtn, { right: S(20), bottom: S(20) }]}
         >
           <View style={styles.canInner}>

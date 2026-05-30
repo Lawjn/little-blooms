@@ -15,8 +15,6 @@ import {
 import { IsometricGarden } from '@/features/garden/components/IsometricGarden';
 import { WeatherPicker } from '@/features/garden/components/WeatherPicker';
 import { WateringCanButton } from '@/features/garden/components/WateringCanButton';
-import { WateringQuoteModal } from '@/features/garden/components/WateringQuoteModal';
-import { getRandomWateringQuote } from '@/features/garden/wateringQuotes';
 import { useMonthMoodEntries } from '@/features/garden/hooks';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { normalizeTheme, type WeatherTheme } from '@/features/garden/weather';
@@ -93,7 +91,6 @@ export default function GardenScreen() {
   const updateTheme = useUpdateActiveTheme();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [weatherOpen, setWeatherOpen] = useState(false);
-  const [quote, setQuote] = useState<string | null>(null);
 
   const onCellPress = (date: string) => {
     router.push({ pathname: '/garden/[date]', params: { date } });
@@ -103,9 +100,9 @@ export default function GardenScreen() {
     if (user) updateTheme.mutate({ userId: user.id, theme });
   };
 
-  // Mỗi lần tưới → 1 câu động viên ngẫu nhiên (không giới hạn số lần)
+  // Bấm bình tưới ngoài vườn → chuyển vào cây hoa hôm nay để tưới trực tiếp
   const handleWater = () => {
-    setQuote((prev) => getRandomWateringQuote(prev ?? undefined));
+    onCellPress(format(today, 'yyyy-MM-dd'));
   };
 
   return (
@@ -163,11 +160,6 @@ export default function GardenScreen() {
         </Pressable>
       </Modal>
 
-      <WateringQuoteModal
-        visible={!!quote}
-        quote={quote ?? ''}
-        onClose={() => setQuote(null)}
-      />
     </View>
   );
 }

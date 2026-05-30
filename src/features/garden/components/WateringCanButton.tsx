@@ -1,48 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { SVG_WATERING_CAN } from '../gardenAssets';
 import { colors, radii, shadows, typography } from '@/lib/theme';
 
 interface WateringCanButtonProps {
-  /** Gọi sau khi animation tưới xong → parent hiện câu động viên. */
+  /** Tap → chuyển vào cây hoa để tưới trực tiếp. */
   onWater: () => void;
   /** Vị trí — mặc định float bottom-right. */
   style?: object;
 }
 
 /**
- * Floating watering-can button.
- * Mỗi lần tap → haptic + nghiêng bình tưới → onWater() (không giới hạn số lần).
+ * Floating watering-can button trên màn Garden chính.
+ * Tap → haptic → onWater() (parent điều hướng vào màn cây hoa).
  */
 export function WateringCanButton({ onWater, style }: WateringCanButtonProps) {
-  const tilt = useRef(new Animated.Value(0)).current;
-  const [pouring, setPouring] = useState(false);
-
-  useEffect(() => () => tilt.stopAnimation(), [tilt]);
-
-  const trigger = () => {
-    if (pouring) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    setPouring(true);
-    Animated.sequence([
-      Animated.timing(tilt, { toValue: 1, duration: 320, useNativeDriver: true }),
-      Animated.timing(tilt, { toValue: 0, duration: 320, useNativeDriver: true }),
-    ]).start(() => {
-      setPouring(false);
-      onWater();
-    });
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onWater();
   };
 
-  const rotate = tilt.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-35deg'] });
-
   return (
-    <Pressable onPress={trigger} disabled={pouring} style={[styles.wrap, style]}>
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [styles.wrap, style, pressed && styles.pressed]}
+    >
       <View style={styles.circle}>
-        <Animated.View style={{ transform: [{ rotate }] }}>
-          <SvgXml xml={SVG_WATERING_CAN} width={34} height={34} />
-        </Animated.View>
+        <SvgXml xml={SVG_WATERING_CAN} width={34} height={34} />
       </View>
       <View style={styles.labelPill}>
         <Text style={styles.labelText}>Tưới cây</Text>
@@ -55,6 +40,10 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     gap: 4,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.95 }],
   },
   circle: {
     width: 60,

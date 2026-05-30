@@ -83,10 +83,11 @@ export default function GardenInfoScreen() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {/* Hero: single plant garden scene */}
-        {entry ? (
+        {/* Hero: single plant garden scene.
+            Hôm nay luôn hiện cây (mood mặc định nếu chưa log) → tưới cây được ngay. */}
+        {entry || isToday ? (
           <SinglePlantScene
-            moodLevel={entry.mood_level}
+            moodLevel={entry?.mood_level ?? 3}
             plantType={activePlant}
             theme={activeTheme}
             dateLabel={dateLabelShort}
