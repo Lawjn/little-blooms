@@ -184,6 +184,7 @@ export default function GardenInfoScreen() {
         visible={!!quote}
         quote={quote ?? ''}
         onClose={() => setQuote(null)}
+        onContinue={() => setQuote((prev) => getRandomWateringQuote(prev ?? undefined))}
       />
     </View>
   );

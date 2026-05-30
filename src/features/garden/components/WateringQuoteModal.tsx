@@ -8,14 +8,22 @@ import { colors, radii, shadows, spacing, typography } from '@/lib/theme';
 interface WateringQuoteModalProps {
   visible: boolean;
   quote: string;
+  /** "Claim" — nhận lời nhắn & đóng. */
   onClose: () => void;
+  /** "Tưới tiếp" — tưới thêm lần nữa, nhận câu mới. */
+  onContinue: () => void;
 }
 
 /**
  * Modal hiện câu an ủi/động viên mỗi khi user tưới cây.
- * Card trắng bo tròn, bình tưới + giọt nước + câu nói + nút đóng.
+ * Card trắng bo tròn, bình tưới + giọt nước + câu nói + 2 nút (Claim / Tưới tiếp).
  */
-export function WateringQuoteModal({ visible, quote, onClose }: WateringQuoteModalProps) {
+export function WateringQuoteModal({
+  visible,
+  quote,
+  onClose,
+  onContinue,
+}: WateringQuoteModalProps) {
   const scale = useRef(new Animated.Value(0.85)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -44,7 +52,20 @@ export function WateringQuoteModal({ visible, quote, onClose }: WateringQuoteMod
             <Text style={styles.label}>Một lời gửi đến bạn</Text>
             <Text style={styles.quote}>{quote}</Text>
 
-            <Button label="Cảm ơn 🌸" onPress={onClose} fullWidth />
+            <View style={styles.buttonRow}>
+              <Button
+                label="Claim ✨"
+                onPress={onClose}
+                variant="primary"
+                style={styles.flexBtn}
+              />
+              <Button
+                label="Tưới tiếp 💧"
+                onPress={onContinue}
+                variant="secondary"
+                style={styles.flexBtn}
+              />
+            </View>
           </Pressable>
         </Animated.View>
       </Pressable>
@@ -98,5 +119,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
     marginBottom: spacing.sm,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    width: '100%',
+  },
+  flexBtn: {
+    flex: 1,
+    paddingHorizontal: spacing.sm,
   },
 });

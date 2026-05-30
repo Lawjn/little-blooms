@@ -146,8 +146,10 @@
 - [x] G.14 Bình tưới ngoài vườn → navigate vào màn cây hoa hôm nay (không hiện quote ở ngoài). Hôm nay luôn hiện cây dù chưa log (mood mặc định 3).
 - [x] G.15 Hiệu ứng tưới: bình tưới **nghiêng + rót nước xuống cây** (canRotate -42deg + giọt nước loop + cây nảy nhẹ) thay vì giọt tự rơi. Quote hiện sau khi rót xong.
 - [x] G.16 Fix overlap nhà/bình tưới ở SinglePlantScene (nhà+cây dời lên bottom 132/150, bình tưới góc dưới phải bottom 20)
-- [ ] G.17 Verify toàn bộ watering UX + pulse tiếng Việt (chờ screenshot)
-- [ ] G.18 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
+- [x] G.17 Fix hướng vòi bình tưới: xoay 70°→140° cho vòi chúc xuống cây (trước bị ngược lên trên)
+- [x] G.18 Quote modal: đổi "Cảm ơn" → "Claim ✨" (primary) + thêm nút "Tưới tiếp 💧" (secondary, lấy câu mới)
+- [ ] G.19 Verify hướng vòi + 2 nút modal (chờ screenshot)
+- [ ] G.20 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
 
 ---
 
