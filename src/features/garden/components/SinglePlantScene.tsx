@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Ellipse, LinearGradient, Path, Stop, Rect, SvgXml } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Flower } from './Flower';
 import type { PlantType } from '../mapping';
@@ -17,7 +16,7 @@ import {
   SVG_WATERING_CAN,
 } from '../gardenAssets';
 import type { MoodLevel } from '@/lib/theme';
-import { colors, radii, shadows, spacing, typography } from '@/lib/theme';
+import { radii, shadows, spacing, typography } from '@/lib/theme';
 
 const FIGMA_W = 430;
 
@@ -32,8 +31,6 @@ interface SinglePlantSceneProps {
   theme: WeatherTheme;
   dateLabel: string; // "Mar 18"
   isToday: boolean;
-  alreadyWatered: boolean;
-  waterStreak: number;
   onWater: () => void;
   topInset?: number;
   height: number;
@@ -45,8 +42,6 @@ export function SinglePlantScene({
   theme,
   dateLabel,
   isToday,
-  alreadyWatered,
-  waterStreak,
   onWater,
   topInset = 0,
   height,
@@ -68,7 +63,7 @@ export function SinglePlantScene({
   const [pouring, setPouring] = useState(false);
 
   const triggerWater = () => {
-    if (alreadyWatered || !isToday) return;
+    if (!isToday || pouring) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     setPouring(true);
     dropAnim.setValue(0);
@@ -176,22 +171,13 @@ export function SinglePlantScene({
       {isToday ? (
         <Pressable
           onPress={triggerWater}
-          disabled={alreadyWatered || pouring}
+          disabled={pouring}
           style={[styles.canBtn, { right: S(20), bottom: S(20) }]}
         >
           <View style={styles.canInner}>
             <SvgXml xml={SVG_WATERING_CAN} width={S(34)} height={S(34)} />
-            {alreadyWatered ? (
-              <View style={styles.lockBadge}>
-                <Ionicons name="lock-closed" size={12} color={colors.white} />
-              </View>
-            ) : null}
           </View>
-          {!alreadyWatered ? (
-            <Text style={styles.canLabel}>Water</Text>
-          ) : (
-            <Text style={styles.canLabelDone}>🔥 {waterStreak}d</Text>
-          )}
+          <Text style={styles.canLabel}>Tưới cây</Text>
         </Pressable>
       ) : null}
     </View>
@@ -228,23 +214,7 @@ const styles = StyleSheet.create({
     borderColor: '#7CB342',
     ...shadows.md,
   },
-  lockBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    borderRadius: radii.full,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   canLabel: {
-    fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.xs,
-    color: '#15607D',
-  },
-  canLabelDone: {
     fontFamily: typography.fontFamily.bold,
     fontSize: typography.sizes.xs,
     color: '#15607D',

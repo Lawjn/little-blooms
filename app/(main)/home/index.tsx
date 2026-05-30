@@ -348,7 +348,7 @@ export default function HomeScreen() {
               style={styles.quickPulsePill}
             >
               <Ionicons name="flash" size={12} color={colors.white} />
-              <Text style={styles.quickPulseText}>Or quick pulse</Text>
+              <Text style={styles.quickPulseText}>Hoặc ghi nhanh</Text>
             </Pressable>
           </View>
 
@@ -413,7 +413,7 @@ export default function HomeScreen() {
       {/* Toast confirm sau pulse log (subtle, stay in place — không redirect) */}
       <Toast
         visible={pulseToastVisible}
-        message="Pulse logged ✓"
+        message="Đã ghi khoảnh khắc ✓"
         variant="success"
         onHide={() => setPulseToastVisible(false)}
       />

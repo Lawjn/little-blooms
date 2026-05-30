@@ -14,11 +14,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO } from 'date-fns';
 import { Flower } from '@/features/garden/components/Flower';
 import { SinglePlantScene } from '@/features/garden/components/SinglePlantScene';
+import { WateringQuoteModal } from '@/features/garden/components/WateringQuoteModal';
+import { getRandomWateringQuote } from '@/features/garden/wateringQuotes';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { normalizeTheme } from '@/features/garden/weather';
-import { useInventory, useWaterPlant } from '@/features/inventory/hooks';
+import { useInventory } from '@/features/inventory/hooks';
 import { useUser } from '@/features/auth/store';
-import { Toast } from '@/components/Toast';
 import { PulseTimelineCard } from '@/features/pulse/components/PulseTimelineCard';
 import { useDeletePulse, useTodayPulses } from '@/features/pulse/hooks';
 import {
@@ -47,9 +48,8 @@ export default function GardenInfoScreen() {
   const activeTheme = normalizeTheme(inventoryQuery.data?.active_theme);
   const pulsesQuery = useTodayPulses({ userId: user?.id, date: date ?? '' });
   const deletePulse = useDeletePulse();
-  const waterMutation = useWaterPlant();
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [quote, setQuote] = useState<string | null>(null);
 
   useEffect(() => {
     const paths = entryQuery.data?.photo_urls ?? [];
@@ -66,27 +66,14 @@ export default function GardenInfoScreen() {
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const isToday = date === todayStr;
-  const alreadyWatered = inventoryQuery.data?.last_watered_date === todayStr;
-  const waterStreak = inventoryQuery.data?.water_streak ?? 0;
   const dateLabelShort = format(parseISO(date), 'MMM d');
   const dateLabelFull = format(parseISO(date), 'EEEE, MMMM d, yyyy');
   const entry = entryQuery.data;
   const sceneHeight = Math.min(screenH * 0.62, 560);
 
+  // Mỗi lần tưới → 1 câu động viên ngẫu nhiên (không giới hạn số lần)
   const handleWater = () => {
-    if (!user) return;
-    waterMutation.mutate(
-      { userId: user.id, todayStr },
-      {
-        onSuccess: (result) => {
-          if (result.alreadyWatered) {
-            setToastMsg('Đã tưới hôm nay rồi 💧');
-          } else {
-            setToastMsg(`Đã tưới! 🔥 Streak ${result.inventory.water_streak} ngày`);
-          }
-        },
-      },
-    );
+    setQuote((prev) => getRandomWateringQuote(prev ?? undefined));
   };
 
   return (
@@ -104,8 +91,6 @@ export default function GardenInfoScreen() {
             theme={activeTheme}
             dateLabel={dateLabelShort}
             isToday={isToday}
-            alreadyWatered={alreadyWatered}
-            waterStreak={waterStreak}
             onWater={handleWater}
             topInset={insets.top}
             height={sceneHeight}
@@ -114,8 +99,8 @@ export default function GardenInfoScreen() {
           <View style={[styles.emptyHero, { paddingTop: insets.top + spacing.xxl }]}>
             <Text style={styles.emptyText}>
               {pulsesQuery.data && pulsesQuery.data.length > 0
-                ? 'Chưa có main entry — chỉ có pulses'
-                : 'Không có entry cho ngày này.'}
+                ? 'Chưa có nhật ký chính — chỉ có khoảnh khắc'
+                : 'Không có nhật ký cho ngày này.'}
             </Text>
           </View>
         )}
@@ -171,7 +156,7 @@ export default function GardenInfoScreen() {
           {pulsesQuery.data && pulsesQuery.data.length > 0 ? (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>
-                Pulses throughout the day ({pulsesQuery.data.length})
+                Khoảnh khắc trong ngày ({pulsesQuery.data.length})
               </Text>
               <View style={styles.pulseList}>
                 {pulsesQuery.data.map((pulse) => (
@@ -194,11 +179,10 @@ export default function GardenInfoScreen() {
         </Pressable>
       </SafeAreaView>
 
-      <Toast
-        visible={!!toastMsg}
-        message={toastMsg ?? ''}
-        variant="success"
-        onHide={() => setToastMsg(null)}
+      <WateringQuoteModal
+        visible={!!quote}
+        quote={quote ?? ''}
+        onClose={() => setQuote(null)}
       />
     </View>
   );

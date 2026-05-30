@@ -139,10 +139,12 @@
 - [x] G.7 Rewrite `garden/[date].tsx` dùng SinglePlantScene hero + detail cards bên dưới + Toast feedback
 - [x] G.8 Tab bar Garden icon đổi `leaf` → center FAB pink (sprout) nổi giữa tab bar match Figma
 - [x] G.9 Reposition tree+house — không còn "lơ lửng"/sát plot, ngồi trên hill front (y=612/632)
-- [x] G.10 `WateringCanButton` floating trên màn Garden chính (luôn thấy, daily action) — fix "không thấy nút tưới"
+- [x] G.10 `WateringCanButton` floating trên màn Garden chính (luôn thấy) — fix "không thấy nút tưới"
 - [x] G.11 User đã apply migration 0012 ✅
-- [ ] G.12 Verify watering flow + tab FAB end-to-end (chờ screenshot)
-- [ ] G.13 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
+- [x] G.12 **Đổi chức năng bình tưới**: bỏ giới hạn 1 lần/ngày → mỗi lần tưới hiện 1 câu an ủi/động viên ngẫu nhiên (`wateringQuotes.ts` 30 câu + `WateringQuoteModal`). DB streak/lock bỏ (waterPlant/useWaterPlant thành dead code, giữ lại không hại).
+- [x] G.13 Dịch Quick pulse → tiếng Việt (QuickLogModal, DecisionScreen, home, garden/[date])
+- [ ] G.14 Verify watering quote flow + tab FAB + pulse tiếng Việt (chờ screenshot)
+- [ ] G.15 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
 
 ---
 

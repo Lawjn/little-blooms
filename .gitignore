@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# Local-only setup guide (chứa hướng dẫn nội bộ, không push)
+docs/SETUP.md
+
 # Expo
 .expo/
 dist/

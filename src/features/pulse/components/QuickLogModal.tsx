@@ -50,7 +50,7 @@ export function QuickLogModal({ visible, onClose, onSuccess }: QuickLogModalProp
   const handleSave = async () => {
     if (!user) return;
     if (moodLevel === null) {
-      Alert.alert('Chưa chọn mood', 'Bạn chưa chọn cảm xúc của moment này.');
+      Alert.alert('Chưa chọn cảm xúc', 'Bạn chưa chọn cảm xúc cho khoảnh khắc này.');
       return;
     }
 
@@ -93,7 +93,7 @@ export function QuickLogModal({ visible, onClose, onSuccess }: QuickLogModalProp
       onSuccess?.();
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Lưu pulse thất bại';
+      const msg = err instanceof Error ? err.message : 'Lưu khoảnh khắc thất bại';
       Alert.alert('Lỗi', msg);
     }
   };
@@ -114,7 +114,7 @@ export function QuickLogModal({ visible, onClose, onSuccess }: QuickLogModalProp
             <View style={styles.handle} />
 
             <View style={styles.header}>
-              <Text style={styles.title}>Quick mood pulse</Text>
+              <Text style={styles.title}>Ghi nhanh cảm xúc</Text>
               <Pressable onPress={handleClose} hitSlop={12}>
                 <Ionicons name="close" size={24} color={colors.text.secondary} />
               </Pressable>
@@ -127,11 +127,11 @@ export function QuickLogModal({ visible, onClose, onSuccess }: QuickLogModalProp
               showsVerticalScrollIndicator={false}
             >
               {/* Mood */}
-              <Text style={styles.sectionLabel}>How are you feeling?</Text>
+              <Text style={styles.sectionLabel}>Bạn đang cảm thấy thế nào?</Text>
               <MoodPicker value={moodLevel} onChange={setMoodLevel} />
 
               {/* Note */}
-              <Text style={styles.sectionLabel}>Note (tùy chọn)</Text>
+              <Text style={styles.sectionLabel}>Ghi chú (tùy chọn)</Text>
               <TextInput
                 value={note}
                 onChangeText={setNote}
@@ -144,12 +144,12 @@ export function QuickLogModal({ visible, onClose, onSuccess }: QuickLogModalProp
               />
 
               {/* Photos */}
-              <Text style={styles.sectionLabel}>Photos (tùy chọn)</Text>
+              <Text style={styles.sectionLabel}>Ảnh (tùy chọn)</Text>
               <PhotoPicker photos={photos} onChange={setPhotos} />
             </ScrollView>
 
             <Button
-              label="Save pulse"
+              label="Lưu khoảnh khắc"
               onPress={handleSave}
               loading={createPulse.isPending}
               fullWidth

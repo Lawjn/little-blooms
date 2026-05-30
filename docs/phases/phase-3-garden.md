@@ -132,4 +132,15 @@ Thầy yêu cầu garden phải match Figma 100%. User chọn **path A**: real S
 - **Tôi không thể xem render của chính mình**: Lặp lại pattern phải xin screenshot từ user mỗi lần tinh chỉnh pixel position. User accept vì là môn coursework có thể iterate.
 - **TILE_VB viewBox cho rhombus**: rhombus full size = 381.857×227.82 (từ Figma plot path), nhưng cần thêm space dưới cho 3D depth layers (#865A3D, #947151) → viewBox height = TILE_VB + 40.
 
-### Status: 🟡 IN PROGRESS — pending user apply migration 0012 + verify watering flow + gửi screenshot fine-tuning.
+### Update 2026-05-30 (lần 2) — đổi chức năng bình tưới + Việt hóa pulse
+
+**Theo feedback user:**
+1. **Tab Garden** → center FAB pink nổi giữa tab bar (icon sprout), tab bar bo góc + nền xanh nhạt. Thêm `colors.accent`/`colors.tabBar`.
+2. **House/tree** dời xuống hill front (y 612/632) — hết "lơ lửng".
+3. **Bình tưới đổi concept**: User: "đừng khóa giới hạn bình tưới, thay vào đó mỗi khi tưới cây → 1 câu an ủi/động viên". → Bỏ hoàn toàn lock 1 lần/ngày + streak. Mỗi tap tưới → random 1 câu trong 30 câu chữa lành tiếng Việt (`wateringQuotes.ts`) hiện trong `WateringQuoteModal` (card đẹp + bình tưới + giọt nước).
+   - `WateringCanButton` đơn giản hóa: props chỉ còn `onWater` + `style`, luôn enable.
+   - `SinglePlantScene` bỏ props alreadyWatered/waterStreak; watering can luôn bấm được.
+   - **Dead code**: `waterPlant` (api.ts) + `useWaterPlant` (hooks.ts) + migration 0012 columns giờ không dùng. Giữ lại không xóa (harmless, tránh thêm migration drop).
+4. **Việt hóa Quick pulse**: "Quick mood pulse"→"Ghi nhanh cảm xúc", "How are you feeling?"→"Bạn đang cảm thấy thế nào?", "Save pulse"→"Lưu khoảnh khắc", "Pulses"→"Khoảnh khắc", "Or quick pulse"→"Hoặc ghi nhanh", "Pulse logged ✓"→"Đã ghi khoảnh khắc ✓", "Update reflection"→"Cập nhật nhật ký", v.v.
+
+### Status: 🟡 IN PROGRESS — pending user verify watering quote flow + tab FAB + pulse Việt hóa + gửi screenshot fine-tuning.

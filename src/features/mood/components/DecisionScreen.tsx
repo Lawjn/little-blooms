@@ -56,7 +56,7 @@ export function DecisionScreen({
         <Flower moodLevel={entry.mood_level} plantType={plantType} size={84} />
         <Text style={styles.moodLabel}>{moodOption?.label}</Text>
         {updatedAt ? (
-          <Text style={styles.updatedAt}>Logged at {updatedAt}</Text>
+          <Text style={styles.updatedAt}>Ghi lúc {updatedAt}</Text>
         ) : null}
         {entry.note ? (
           <Text style={styles.notePreview} numberOfLines={2}>
@@ -82,8 +82,8 @@ export function DecisionScreen({
             <MaterialCommunityIcons name="pencil" size={22} color={colors.white} />
           </View>
           <View style={styles.actionText}>
-            <Text style={styles.actionTitle}>Update reflection</Text>
-            <Text style={styles.actionSub}>Edit cảm xúc, tags, note, ảnh</Text>
+            <Text style={styles.actionTitle}>Cập nhật nhật ký</Text>
+            <Text style={styles.actionSub}>Sửa cảm xúc, thẻ, ghi chú, ảnh</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
         </Pressable>
@@ -97,8 +97,8 @@ export function DecisionScreen({
               <MaterialCommunityIcons name="lightning-bolt" size={22} color={colors.white} />
             </View>
             <View style={styles.actionText}>
-              <Text style={styles.actionTitle}>Quick pulse</Text>
-              <Text style={styles.actionSub}>Log moment cảm xúc ngay bây giờ</Text>
+              <Text style={styles.actionTitle}>Ghi nhanh</Text>
+              <Text style={styles.actionSub}>Ghi lại khoảnh khắc cảm xúc ngay bây giờ</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
           </Pressable>
@@ -106,7 +106,7 @@ export function DecisionScreen({
           <View style={styles.disabledNotice}>
             <Ionicons name="information-circle-outline" size={18} color={colors.text.secondary} />
             <Text style={styles.disabledNoticeText}>
-              Quick pulse chỉ log cho ngày hôm nay
+              Ghi nhanh chỉ áp dụng cho hôm nay
             </Text>
           </View>
         )}
@@ -116,7 +116,7 @@ export function DecisionScreen({
       {pulsesQuery.data && pulsesQuery.data.length > 0 ? (
         <View style={styles.pulsesSection}>
           <Text style={styles.sectionTitle}>
-            Pulses ({pulsesQuery.data.length})
+            Khoảnh khắc ({pulsesQuery.data.length})
           </Text>
           <View style={styles.pulsesList}>
             {pulsesQuery.data.map((pulse) => (
