@@ -153,8 +153,8 @@
 
 ---
 
-## AI Coach "Bloom" [🟡 IN PROGRESS — code xong, chờ user deploy]
-> Check-in cảm xúc + lời khuyên lifestyle qua Gemini 2.0 Flash. Chi tiết: ADR-012.
+## AI Coach "Bloom" [✅ DONE — verified trên thiết bị thật 2026-05-30]
+> Check-in cảm xúc + lời khuyên lifestyle qua Groq (Llama 3.3 70B). Chi tiết: ADR-012.
 
 - [x] AI.1 Edge Function `supabase/functions/ai-coach/index.ts` (Deno + Gemini, system prompt VN + guardrail an toàn, strip leading model turn, CORS)
 - [x] AI.2 `src/features/coach/` — types + context (buildMoodContext 7 ngày) + api (functions.invoke) + hooks (useRecentMoodEntries, useSendCoachMessage)
@@ -163,9 +163,9 @@
 - [x] AI.5 `tsconfig.json` exclude `supabase/functions` (Deno type riêng)
 - [x] AI.6 User đã deploy Edge Function `ai-coach` (chat UI chạy, gọi tới được AI)
 - [x] AI.7 **Đổi Gemini → Groq + Llama 3.3**: key Gemini trả 429 limit:0 (không có free quota). Groq free tier rộng, không cần billing, API chuẩn OpenAI.
-- [ ] AI.8 **User**: set secret `GROQ_API_KEY` (lấy ở console.groq.com) + re-deploy function
-- [ ] AI.9 Verify chat end-to-end trên thiết bị thật
-- [ ] AI.10 (sau) User rotate key (đã lộ trong chat)
+- [x] AI.8 User set secret `GROQ_API_KEY` + re-deploy function
+- [x] AI.9 ✅ Verify chat end-to-end trên thiết bị thật — **mọi thứ OK**
+- [ ] AI.10 (sau khi nộp đồ án) User rotate key (đã lộ trong chat)
 
 ---
 
