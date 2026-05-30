@@ -1,5 +1,5 @@
 import { Tabs, Redirect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsAuthenticated, useIsInitializing } from '@/features/auth/store';
 import { colors } from '@/lib/theme';
 
@@ -43,7 +43,9 @@ export default function MainLayout() {
         name="garden/index"
         options={{
           title: 'Garden',
-          tabBarIcon: ({ color, size }) => <Ionicons name="leaf" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="flower-tulip" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

@@ -310,12 +310,14 @@ export function IsometricGarden({
         <SvgXml xml={SVG_BIRD} width={S(44)} height={S(44)} />
       </View>
 
-      {/* Tree + House trên hill phải (SVG noto) */}
-      <View style={[styles.deco, { left: S(330), top: S(478) }]}>
-        <SvgXml xml={SVG_TREE} width={S(54)} height={S(54)} />
+      {/* Tree + House trên hill phải (SVG noto) — đặt dưới plot, ngồi trên hill front
+          (plot bottom y ≈ 567; hill front top y ≈ 631). Cần giãn ra khỏi rìa plot
+          và đặt thấp xuống để không "lơ lửng" hay sát plot. */}
+      <View style={[styles.deco, { left: S(298), top: S(612) }]}>
+        <SvgXml xml={SVG_TREE} width={S(60)} height={S(60)} />
       </View>
-      <View style={[styles.deco, { left: S(352), top: S(500) }]}>
-        <SvgXml xml={SVG_HOUSE} width={S(56)} height={S(56)} />
+      <View style={[styles.deco, { left: S(346), top: S(632) }]}>
+        <SvgXml xml={SVG_HOUSE} width={S(62)} height={S(62)} />
       </View>
 
       {/* Character trên hill trái — sheep (sunny/cloudy/rainy) hoặc snowman (snowy) */}

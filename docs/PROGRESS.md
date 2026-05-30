@@ -137,8 +137,10 @@
 - [x] G.5 `waterPlant` API + `useWaterPlant` hook (1 lần/ngày, streak +1 nếu liên tục)
 - [x] G.6 `SinglePlantScene.tsx` — single-plant garden view cho Garden info detail (rhombus tile + plant + watering can + pour animation)
 - [x] G.7 Rewrite `garden/[date].tsx` dùng SinglePlantScene hero + detail cards bên dưới + Toast feedback
-- [ ] G.8 User apply migration 0012 + verify watering flow end-to-end
-- [ ] G.9 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
+- [x] G.8 Tab bar Garden icon đổi `leaf` → `flower-tulip` (match Figma + in-app header icon)
+- [x] G.9 Reposition tree+house — không còn "lơ lửng"/sát plot, ngồi trên hill front (y=612/632)
+- [ ] G.10 User apply migration 0012 + verify watering flow end-to-end
+- [ ] G.11 Pixel-perfect fine-tuning theo screenshot từ user (positioning loop)
 
 ---
 
