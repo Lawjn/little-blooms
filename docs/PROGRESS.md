@@ -153,6 +153,20 @@
 
 ---
 
+## AI Coach "Bloom" [🟡 IN PROGRESS — code xong, chờ user deploy]
+> Check-in cảm xúc + lời khuyên lifestyle qua Gemini 2.0 Flash. Chi tiết: ADR-012.
+
+- [x] AI.1 Edge Function `supabase/functions/ai-coach/index.ts` (Deno + Gemini, system prompt VN + guardrail an toàn, strip leading model turn, CORS)
+- [x] AI.2 `src/features/coach/` — types + context (buildMoodContext 7 ngày) + api (functions.invoke) + hooks (useRecentMoodEntries, useSendCoachMessage)
+- [x] AI.3 Màn chat `app/(main)/coach.tsx` (bubble UI, typing indicator, input bar, disclaimer)
+- [x] AI.4 Entry point: nút chatbubble ở header Home → `/coach`. Route hidden trong tab layout.
+- [x] AI.5 `tsconfig.json` exclude `supabase/functions` (Deno type riêng)
+- [ ] AI.6 **User deploy**: tạo Edge Function `ai-coach` trên Dashboard + set secret `GEMINI_API_KEY` (hướng dẫn step-by-step)
+- [ ] AI.7 Verify chat end-to-end trên thiết bị thật
+- [ ] AI.8 (sau) User rotate Gemini key (đã lộ trong chat)
+
+---
+
 ## Phase 5 — Calendar [✅ DONE pending user verify]
 > Bao gồm cả 2.2 (date selector trong Home) — gom navigation date 1 chỗ.
 

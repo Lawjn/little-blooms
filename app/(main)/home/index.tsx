@@ -314,7 +314,13 @@ export default function HomeScreen() {
         <Text style={styles.headerDate}>{dateLabel}</Text>
         <Ionicons name="chevron-down" size={14} color={colors.primary} />
       </Pressable>
-      <View style={styles.headerLeft} />
+      <Pressable
+        onPress={() => router.push('/coach')}
+        hitSlop={8}
+        style={styles.headerLeft}
+      >
+        <Ionicons name="chatbubble-ellipses" size={22} color={colors.primary} />
+      </Pressable>
     </View>
   );
 

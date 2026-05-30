@@ -73,6 +73,7 @@ export default function MainLayout() {
         }}
       />
       {/* Hide các route con khỏi tab bar — vẫn navigatable qua router.push */}
+      <Tabs.Screen name="coach" options={{ href: null }} />
       <Tabs.Screen name="garden/[date]" options={{ href: null }} />
       <Tabs.Screen name="home/calendar" options={{ href: null }} />
       <Tabs.Screen name="gallery" options={{ href: null }} />

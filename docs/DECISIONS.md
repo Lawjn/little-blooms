@@ -4,6 +4,33 @@
 
 ---
 
+## ADR-012: AI Coach "Bloom" — Gemini qua Supabase Edge Function
+
+**Date**: 2026-05-30
+**Status**: Accepted
+**Context**: User muốn feature AI: check-in cảm xúc hằng ngày (hỏi thăm hôm nay thế nào, ăn uống đủ chưa, vui/buồn gì) → phân tích + đưa lời khuyên điều chỉnh lifestyle tích cực (ăn uống, vận động, nghỉ ngơi, kết nối). User cân nhắc self-train model nhưng budget eo hẹp + đây là môn làm app.
+
+**Decision**:
+- **Plan A — gọi cloud AI API**, KHÔNG self-train/self-host (tốn server GPU, cần dataset, lệch scope đồ án).
+- Chọn **Google Gemini 2.0 Flash** (model đóng): tiếng Việt tốt nhất, free tier rộng (~1500 req/ngày), dễ tích hợp. Không lock-in vì bọc trong Edge Function.
+- **KHÔNG cần đổi DB sang NoSQL/vector** — data đã structured, chỉ gửi text summary 7 ngày gần nhất làm context. (Supabase Postgres có sẵn pgvector nếu sau cần.)
+- **Bảo mật key**: GEMINI_API_KEY lưu làm **Edge Function secret** (server-side), client gọi qua `supabase.functions.invoke('ai-coach')`. Key KHÔNG bao giờ vào app bundle / không commit.
+- **Guardrail an toàn**: system prompt giới hạn vai trò (không phải bác sĩ/trị liệu); nếu user có dấu hiệu khủng hoảng → khuyên tìm người thân/chuyên gia. safetySettings = BLOCK_ONLY_HIGH để model vẫn đồng hành khi user chia sẻ chuyện buồn.
+
+**Files**:
+- `supabase/functions/ai-coach/index.ts` — Edge Function (Deno), gọi Gemini.
+- `src/features/coach/{types,context,api,hooks}.ts` — client.
+- `app/(main)/coach.tsx` — màn chat. Entry: nút chatbubble ở header Home.
+- `tsconfig.json` — exclude `supabase/functions` (code Deno, type-check riêng).
+
+**Consequences**:
+- ✅ Miễn phí, "AI thật" để demo, không đổi database, không lộ key.
+- ✅ Đổi sang model mở (Llama/Groq) sau chỉ sửa 1 file Edge Function.
+- ⚠ User phải tự: tạo Gemini API key + deploy Edge Function qua Dashboard + set secret (hướng dẫn step-by-step, không cần CLI/Docker).
+- ⚠ Key đã bị lộ trong chat → user nên rotate sau khi nộp đồ án.
+
+---
+
 ## ADR-001: React Native + Expo (managed workflow)
 
 **Date**: 2026-05-05
