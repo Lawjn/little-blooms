@@ -110,9 +110,9 @@ export function SinglePlantScene({
     };
   }, [tilt, stream]);
 
-  // Vòi bình tưới (mặc định chỉa lên NE) → xoay cho vòi chúc xuống cây.
-  // Tip in từ 70° → 140° (vòi quét từ ngang xuống dưới) = động tác đang rót.
-  const canRotate = tilt.interpolate({ inputRange: [0, 1], outputRange: ['70deg', '140deg'] });
+  // Bình tưới: đặt bên phải cây, MIRROR (scaleX -1) cho vòi quay sang trái,
+  // rồi nghiêng nhẹ 18°→52° để vòi chúc xuống tưới cây bên trái.
+  const canRotate = tilt.interpolate({ inputRange: [0, 1], outputRange: ['18deg', '52deg'] });
   const streamTranslateY = stream.interpolate({ inputRange: [0, 1], outputRange: [0, S(56)] });
   const streamOpacity = stream.interpolate({
     inputRange: [0, 0.15, 0.85, 1],
@@ -192,9 +192,9 @@ export function SinglePlantScene({
           <Animated.View
             style={{
               position: 'absolute',
-              left: plantCenterX - S(30),
-              top: plantTopY - S(64),
-              transform: [{ rotate: canRotate }],
+              left: plantCenterX - S(2),
+              top: plantTopY - S(62),
+              transform: [{ scaleX: -1 }, { rotate: canRotate }],
             }}
           >
             <SvgXml xml={SVG_WATERING_CAN} width={S(58)} height={S(58)} />
@@ -204,8 +204,8 @@ export function SinglePlantScene({
               key={i}
               style={{
                 position: 'absolute',
-                left: plantCenterX - S(12) + i * S(7),
-                top: plantTopY - S(16) + i * S(10),
+                left: plantCenterX - S(16) + i * S(7),
+                top: plantTopY - S(14) + i * S(10),
                 fontSize: S(13),
                 opacity: streamOpacity,
                 transform: [{ translateY: streamTranslateY }],
