@@ -1,7 +1,8 @@
 import { Tabs, Redirect } from 'expo-router';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsAuthenticated, useIsInitializing } from '@/features/auth/store';
-import { colors } from '@/lib/theme';
+import { colors, shadows } from '@/lib/theme';
 
 export default function MainLayout() {
   const isAuthenticated = useIsAuthenticated();
@@ -14,14 +15,21 @@ export default function MainLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.text.secondary,
+        tabBarActiveTintColor: colors.primaryDark,
+        tabBarInactiveTintColor: '#6B8E68',
         tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
+          backgroundColor: colors.tabBar,
+          borderTopWidth: 0,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          height: 64 + (Platform.OS === 'ios' ? 20 : 0),
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          ...shadows.lg,
         },
         tabBarLabelStyle: {
           fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
@@ -42,9 +50,11 @@ export default function MainLayout() {
       <Tabs.Screen
         name="garden/index"
         options={{
-          title: 'Garden',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="flower-tulip" size={size} color={color} />
+          title: '',
+          tabBarIcon: () => (
+            <View style={styles.fab}>
+              <MaterialCommunityIcons name="sprout" size={28} color={colors.white} />
+            </View>
           ),
         }}
       />
@@ -72,3 +82,18 @@ export default function MainLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30, // nâng nổi lên trên tab bar
+    borderWidth: 4,
+    borderColor: colors.white,
+    ...shadows.lg,
+  },
+});

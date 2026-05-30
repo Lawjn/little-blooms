@@ -13,6 +13,11 @@ export const colors = {
   greenLight: '#E8F5E8',
   sky: '#A8DADC',
 
+  // Garden center FAB (tab bar) — pink theo Figma
+  accent: '#F19EC2',
+  accentDark: '#E57BA8',
+  tabBar: '#C7E7C2',
+
   mood: {
     veryGood: { main: '#7CB342', light: '#C5E1A5' },
     good: { main: '#FFEB3B', light: '#FFF59D' },

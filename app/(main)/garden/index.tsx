@@ -14,14 +14,16 @@ import {
 } from 'date-fns';
 import { IsometricGarden } from '@/features/garden/components/IsometricGarden';
 import { WeatherPicker } from '@/features/garden/components/WeatherPicker';
+import { WateringCanButton } from '@/features/garden/components/WateringCanButton';
 import { useMonthMoodEntries } from '@/features/garden/hooks';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
 import { normalizeTheme, type WeatherTheme } from '@/features/garden/weather';
-import { useInventory, useUpdateActiveTheme } from '@/features/inventory/hooks';
+import { useInventory, useUpdateActiveTheme, useWaterPlant } from '@/features/inventory/hooks';
 import { usePulsesInRange } from '@/features/pulse/hooks';
 import { PlantSwitcher } from '@/features/profile/components/PlantSwitcher';
 import { useUser } from '@/features/auth/store';
 import { Button } from '@/components/Button';
+import { Toast } from '@/components/Toast';
 import { colors, radii, spacing } from '@/lib/theme';
 import type { MoodEntry } from '@/features/mood/types';
 import type { MoodLevel } from '@/lib/theme';
@@ -88,8 +90,14 @@ export default function GardenScreen() {
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
   const activeTheme = normalizeTheme(inventoryQuery.data?.active_theme);
   const updateTheme = useUpdateActiveTheme();
+  const waterMutation = useWaterPlant();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const todayStr = format(today, 'yyyy-MM-dd');
+  const alreadyWatered = inventoryQuery.data?.last_watered_date === todayStr;
+  const waterStreak = inventoryQuery.data?.water_streak ?? 0;
 
   const onCellPress = (date: string) => {
     router.push({ pathname: '/garden/[date]', params: { date } });
@@ -97,6 +105,22 @@ export default function GardenScreen() {
 
   const onSelectTheme = (theme: WeatherTheme) => {
     if (user) updateTheme.mutate({ userId: user.id, theme });
+  };
+
+  const handleWater = () => {
+    if (!user) return;
+    waterMutation.mutate(
+      { userId: user.id, todayStr },
+      {
+        onSuccess: (result) => {
+          if (result.alreadyWatered) {
+            setToastMsg('Đã tưới hôm nay rồi 💧');
+          } else {
+            setToastMsg(`Đã tưới! 🔥 Streak ${result.inventory.water_streak} ngày`);
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -122,6 +146,16 @@ export default function GardenScreen() {
         />
       </ScrollView>
 
+      {/* Floating watering can — daily streak action (chỉ tháng hiện tại) */}
+      {isAtCurrentMonth ? (
+        <WateringCanButton
+          alreadyWatered={alreadyWatered}
+          waterStreak={waterStreak}
+          onWater={handleWater}
+          style={[styles.waterFab, { bottom: insets.bottom + spacing.md }]}
+        />
+      ) : null}
+
       {/* Weather picker modal */}
       <WeatherPicker
         visible={weatherOpen}
@@ -145,6 +179,13 @@ export default function GardenScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Toast
+        visible={!!toastMsg}
+        message={toastMsg ?? ''}
+        variant="success"
+        onHide={() => setToastMsg(null)}
+      />
     </View>
   );
 }
@@ -156,6 +197,10 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
+  },
+  waterFab: {
+    position: 'absolute',
+    right: spacing.lg,
   },
   modalBackdrop: {
     flex: 1,
