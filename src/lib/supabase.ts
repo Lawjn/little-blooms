@@ -21,5 +21,7 @@ export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE flow cho OAuth trên mobile (Google login qua deep link)
+    flowType: 'pkce',
   },
 });

@@ -235,6 +235,20 @@
 
 ---
 
+## Google Login [🟡 IN PROGRESS — code xong, chờ user config]
+> Web OAuth flow (PKCE) — KHÔNG cần SHA-1, chạy cả Expo Go + APK. Chi tiết ADR sẽ bổ sung.
+
+- [x] Cài expo-web-browser + expo-linking
+- [x] Supabase client: flowType 'pkce'
+- [x] `signInWithGoogle()` (api.ts): signInWithOAuth(skipBrowserRedirect) → WebBrowser.openAuthSessionAsync → exchangeCodeForSession. redirectTo = Linking.createURL('/')
+- [x] `useSignInWithGoogle` hook + wire nút "Tiếp tục với Google" ở login.tsx (+ WebBrowser.maybeCompleteAuthSession)
+- [x] Profile trigger đã hỗ trợ Google (coalesce name) — không cần sửa DB
+- [ ] **User config**: Google Cloud OAuth Web client + Supabase Google provider + redirect URLs
+- [ ] Test trên APK (Android) — deliverable chính
+- [ ] (Nếu sa lầy → revert, giữ email/password)
+
+---
+
 ## Gỡ thanh toán (Premium + Seeds) [✅ DONE 2026-05-31]
 > User chưa làm được IAP thật → bỏ mọi thứ dính tiền. Giữ Store + đổi cây miễn phí.
 
