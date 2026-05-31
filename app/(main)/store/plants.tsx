@@ -24,46 +24,19 @@ export default function StorePlantsScreen() {
   const setActiveMutation = useUpdateActivePlant();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const seeds = inventoryQuery.data?.seeds_balance ?? 0;
   const owned = inventoryQuery.data?.owned_plants ?? ['tulip'];
   const active = inventoryQuery.data?.active_plant ?? 'tulip';
 
-  const handleUnlock = (plant: PlantType, cost: number) => {
+  // Mở khóa miễn phí (cost = 0)
+  const handleUnlock = async (plant: PlantType) => {
     if (!user) return;
-    if (seeds < cost) {
-      Alert.alert(
-        'Không đủ seeds',
-        `Cần ${cost} 🌱 nhưng bạn chỉ có ${seeds}. Earn thêm qua log mood hoặc Buy Seeds.`,
-        [
-          { text: 'Hủy', style: 'cancel' },
-          { text: 'Buy Seeds', onPress: () => router.push('/store/seeds' as never) },
-        ],
-      );
-      return;
+    try {
+      await unlockMutation.mutateAsync({ userId: user.id, plant, cost: 0 });
+      setToastMsg(`Đã mở khóa ${PLANT_LABEL[plant]} ${PLANT_EMOJI[plant]}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Mở khóa thất bại';
+      Alert.alert('Lỗi', msg);
     }
-    Alert.alert(
-      `Unlock ${PLANT_LABEL[plant]}?`,
-      `Spend ${cost} 🌱 để mở khóa loài cây này cho vườn của bạn.`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Unlock',
-          onPress: async () => {
-            try {
-              await unlockMutation.mutateAsync({
-                userId: user.id,
-                plant,
-                cost,
-              });
-              setToastMsg(`Đã unlock ${PLANT_LABEL[plant]} ${PLANT_EMOJI[plant]}`);
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : 'Unlock thất bại';
-              Alert.alert('Lỗi', msg);
-            }
-          },
-        },
-      ],
-    );
   };
 
   const handleSetActive = async (plant: PlantType) => {
@@ -77,12 +50,11 @@ export default function StorePlantsScreen() {
     }
   };
 
-  // Hardcode tulip (free, đã owned từ default) lên đầu
-  const allPlants: { plant: PlantType; cost: number; name: string; desc: string }[] = [
-    { plant: 'tulip', cost: 0, name: PLANT_LABEL.tulip, desc: 'Loài cây mặc định, free cho mọi user' },
+  // Tulip free mặc định lên đầu, các cây còn lại từ store items (đều miễn phí)
+  const allPlants: { plant: PlantType; name: string; desc: string }[] = [
+    { plant: 'tulip', name: PLANT_LABEL.tulip, desc: 'Loài cây mặc định cho khu vườn' },
     ...(itemsQuery.data ?? []).map((item) => ({
       plant: (item.metadata.plant_type ?? 'tulip') as PlantType,
-      cost: (item.metadata as { seeds_cost?: number }).seeds_cost ?? 0,
       name: item.name,
       desc: item.description ?? '',
     })),
@@ -94,13 +66,8 @@ export default function StorePlantsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={26} color={colors.primary} />
         </Pressable>
-        <Text style={styles.title}>Plant species</Text>
+        <Text style={styles.title}>Các loài cây</Text>
         <View style={{ width: 26 }} />
-      </View>
-
-      <View style={styles.balanceBar}>
-        <Text style={styles.balanceLabel}>Your seeds</Text>
-        <Text style={styles.balanceValue}>🌱 {seeds.toLocaleString()}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -116,15 +83,15 @@ export default function StorePlantsScreen() {
                 {isActive ? (
                   <View style={styles.activeBadge}>
                     <Ionicons name="checkmark-circle" size={12} color={colors.primary} />
-                    <Text style={styles.activeText}>Active</Text>
+                    <Text style={styles.activeText}>Đang dùng</Text>
                   </View>
                 ) : isOwned ? (
-                  <Text style={styles.ownedText}>Owned</Text>
+                  <Text style={styles.ownedText}>Đã mở khóa</Text>
                 ) : null}
               </View>
               {isActive ? null : isOwned ? (
                 <Button
-                  label="Use"
+                  label="Dùng"
                   onPress={() => handleSetActive(p.plant)}
                   variant="secondary"
                   loading={setActiveMutation.isPending}
@@ -132,8 +99,8 @@ export default function StorePlantsScreen() {
                 />
               ) : (
                 <Button
-                  label={`🌱 ${p.cost}`}
-                  onPress={() => handleUnlock(p.plant, p.cost)}
+                  label="Mở khóa"
+                  onPress={() => handleUnlock(p.plant)}
                   loading={unlockMutation.isPending}
                   style={styles.actionBtn}
                 />
@@ -164,27 +131,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.lg,
-    color: colors.primary,
-  },
-  balanceBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.cream,
-    marginHorizontal: spacing.lg,
-    borderRadius: radii.lg,
-    marginTop: spacing.sm,
-  },
-  balanceLabel: {
-    fontFamily: typography.fontFamily.semibold,
-    fontSize: typography.sizes.sm,
-    color: colors.text.secondary,
-  },
-  balanceValue: {
-    fontFamily: typography.fontFamily.extrabold,
     fontSize: typography.sizes.lg,
     color: colors.primary,
   },

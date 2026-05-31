@@ -45,7 +45,30 @@
       "Bash(git push *)",
       "Bash(npx --yes expo install expo-haptics)",
       "Bash(git restore *)",
-      "Bash(npx --yes expo install expo-camera)"
+      "Bash(npx --yes expo install expo-camera)",
+      "Bash(ls \"C:/Users/tranx/AppData/Local/Temp/lb-*.png\" 2>&1 | head -5)",
+      "mcp__8a736e57-f458-4f85-b5b8-06c729184a7c__get_screenshot",
+      "Bash(curl -s -o \"C:/Users/tranx/AppData/Local/Temp/lb-garden-recall.png\" \"https://www.figma.com/api/mcp/asset/b5d4e107-e922-4f61-a364-8d0e26c22449\")",
+      "Bash(where dart *)",
+      "Bash(mkdir \"E:\\\\DartLab\" 2>nul; echo done)",
+      "Bash(/e/Flutter/flutter/bin/dart run *)",
+      "Bash(powershell -NoProfile -Command \"Compress-Archive -Path 'E:\\\\DartLab\\\\bai1_kieu_du_lieu.dart','E:\\\\DartLab\\\\bai2_collections_toan_tu.dart','E:\\\\DartLab\\\\bai3_luong_dieu_khien_ham.dart','E:\\\\DartLab\\\\bai4_oop.dart','E:\\\\DartLab\\\\bai5_async_null_safety.dart' -DestinationPath 'E:\\\\DartLab\\\\DartLab_NopBai.zip' -Force\")",
+      "Bash(ls -la C:/Users/tranx/.claude/projects/E--LittleBloom/e96a0a17-5d9a-4dda-a69a-895c22c9cd26/tool-results/mcp-8a736e57-f458-4f85-b5b8-06c729184a7c-get_metadata-1777965085164.txt)",
+      "mcp__8a736e57-f458-4f85-b5b8-06c729184a7c__get_variable_defs",
+      "mcp__8a736e57-f458-4f85-b5b8-06c729184a7c__get_design_context",
+      "Bash(curl -s -o \"E:/LittleBloom/assets/garden/plot-top.png\" \"https://www.figma.com/api/mcp/asset/b0a470e1-1bb0-4d03-a9c2-31f2ad0f4445\")",
+      "Bash(cp \"E:/LittleBloom/assets/garden/plot-top.png\" \"C:/Users/tranx/AppData/Local/Temp/plot-top.png\")",
+      "Bash(curl -s -o \"E:/LittleBloom/assets/garden/plot-mid.svg\" \"https://www.figma.com/api/mcp/asset/842e24fb-7502-41c2-bf4d-1c57aae2aaf0\")",
+      "Bash(curl -s -o \"E:/LittleBloom/assets/garden/plot-bot.svg\" \"https://www.figma.com/api/mcp/asset/cb4cb8f8-fb13-4a37-bccd-623d55cdd963\")",
+      "Bash(pip install *)",
+      "Bash(curl -s -o \"cherry.svg\" \"https://api.iconify.design/noto/cherry-blossom.svg\")",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(eas --version)",
+      "Bash(npm --version)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('app.json'\\)\\); print\\('owner:', d['expo'].get\\('owner'\\)\\); print\\('extra:', d['expo'].get\\('extra'\\)\\); print\\('projectId:', d['expo'].get\\('extra',{}\\).get\\('eas',{}\\).get\\('projectId'\\)\\)\")",
+      "Bash(node -e \"const d=require\\('./app.json'\\); console.log\\('owner:',d.expo.owner\\); console.log\\('extra:',JSON.stringify\\(d.expo.extra\\)\\); console.log\\('projectId:',d.expo.extra?.eas?.projectId\\)\")",
+      "Bash(echo \"=== EXIT: $? ===\")"
     ]
   }
 }

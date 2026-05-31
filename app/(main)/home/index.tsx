@@ -9,7 +9,7 @@ import { Button } from '@/components/Button';
 import type { PhotoSlot } from '@/components/PhotoPicker';
 import { useUser } from '@/features/auth/store';
 import { DEFAULT_PLANT } from '@/features/garden/mapping';
-import { useAddSeeds, useInventory } from '@/features/inventory/hooks';
+import { useInventory } from '@/features/inventory/hooks';
 import { SaveSuccessSheet } from '@/features/mood/components/SaveSuccessSheet';
 import { StepProgress } from '@/features/mood/components/StepProgress';
 import { ActivitiesStep } from '@/features/mood/components/steps/ActivitiesStep';
@@ -52,7 +52,6 @@ export default function HomeScreen() {
   const saveMutation = useSaveMoodEntry();
   const inventoryQuery = useInventory(user?.id);
   const activePlant = inventoryQuery.data?.active_plant ?? DEFAULT_PLANT;
-  const addSeedsMutation = useAddSeeds();
 
   const isFutureDate = isAfter(startOfDay(parseISO(activeDate)), startOfDay(new Date()));
 
@@ -213,11 +212,6 @@ export default function HomeScreen() {
       setSuccessVisible(true);
       // Sau khi save xong → switch sang decision screen (entry now exists)
       setViewMode('decision');
-
-      // Seeds reward: +5 cho main entry mới (không reward nếu update)
-      if (!wasExisting) {
-        addSeedsMutation.mutate({ userId: user.id, amount: 5 });
-      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Lưu thất bại';
       Alert.alert('Lỗi lưu entry', msg);

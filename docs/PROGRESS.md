@@ -235,15 +235,33 @@
 
 ---
 
-## Phase 10 — Build, Test, Deploy [⬜ NOT STARTED]
-- [ ] 10.1 EAS config
-- [ ] 10.2 App icon + splash từ Figma
-- [ ] 10.3 Bundle ID + signing setup
-- [ ] 10.4 EAS Build iOS → TestFlight
-- [ ] 10.5 EAS Build Android → Play internal
-- [ ] 10.6 Privacy policy + terms
-- [ ] 10.7 Store metadata
-- [ ] 10.8 Final QA
+## Gỡ thanh toán (Premium + Seeds) [✅ DONE 2026-05-31]
+> User chưa làm được IAP thật → bỏ mọi thứ dính tiền. Giữ Store + đổi cây miễn phí.
+
+- [x] Xóa `store/premium.tsx` + `store/seeds.tsx`
+- [x] `store/index.tsx` viết lại: chỉ còn "Các loài cây" (free) + Themes (coming soon), bỏ seeds balance + premium banner
+- [x] `store/plants.tsx`: mở khóa cây miễn phí (cost=0, bỏ seeds gating)
+- [x] `profile.tsx`: bỏ Premium badge + Upgrade CTA
+- [x] `stats.tsx`: bỏ AI insight demo premium-gated → thay bằng card gợi ý mở AI Coach (free)
+- [x] `home/index.tsx`: bỏ seeds reward +5 khi save entry
+- [x] `_layout.tsx`: bỏ route ẩn store/seeds + store/premium
+- [x] Dead code: addSeeds/fakePurchaseSeeds/setPremium trong inventory giữ lại (vô hại)
+- [ ] Rebuild APK với bản đã gỡ thanh toán
+
+---
+
+## Phase 10 — Build, Test, Deploy [🟡 IN PROGRESS — APK build OK]
+- [x] 10.1 EAS config (`eas.json`: preview=apk, production=aab, env Supabase nhúng sẵn)
+- [x] 10.1b `.npmrc` legacy-peer-deps=true → fix EAS install deps fail (xung đột Supabase+RN)
+- [x] 10.1c `eas init` → projectId `c2e0308f-...` (owner lawjn)
+- [x] 10.2 App icon + splash (đã có sẵn assets/*.png)
+- [x] 10.3 Bundle ID `com.littleblooms.app` + Android keystore (EAS auto-gen)
+- [x] 10.5b **EAS Build Android APK (preview) THÀNH CÔNG** 2026-05-30 → artifact .apk
+- [ ] 10.4 EAS Build iOS → TestFlight (defer — cần Apple Developer $99)
+- [ ] 10.5 Play Store publish — **BLOCKED**: tài khoản Play Console bị restricted (verify danh tính CCCD fail). Đang appeal/đòi hoàn $25. APK gửi thầy trực tiếp thay thế.
+- [ ] 10.6 Privacy policy + terms (chỉ cần nếu publish Play Store)
+- [ ] 10.7 Store metadata (chỉ cần nếu publish Play Store)
+- [ ] 10.8 Final QA toàn app trên thiết bị thật
 
 ---
 
