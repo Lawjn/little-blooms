@@ -6,18 +6,16 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { TextField } from '@/components/TextField';
 import { useSignIn } from '@/features/auth/hooks';
-import { colors, radii, shadows, spacing, typography } from '@/lib/theme';
+import { colors, spacing, typography } from '@/lib/theme';
 
 const schema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -54,11 +52,6 @@ export default function LoginScreen() {
         Alert.alert('Đăng nhập thất bại', message);
       }
     }
-  };
-
-  const onGooglePress = () => {
-    // TODO sub-task 1.10: Google OAuth
-    console.log('[google oauth placeholder]');
   };
 
   return (
@@ -118,18 +111,6 @@ export default function LoginScreen() {
             fullWidth
           />
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or login with</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <Pressable style={styles.socialBtn} onPress={onGooglePress}>
-              <Ionicons name="logo-google" size={24} color="#DB4437" />
-            </Pressable>
-          </View>
-
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don&apos;t have an account? </Text>
             <Link href="/signup" replace style={styles.footerLink}>
@@ -165,38 +146,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'right',
     marginTop: spacing.xs,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginVertical: spacing.sm,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontFamily: typography.fontFamily.regular,
-    fontSize: typography.sizes.sm,
-    color: colors.text.secondary,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
-  socialBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   footer: {
     flexDirection: 'row',
