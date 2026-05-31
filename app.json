@@ -43,7 +43,8 @@
           "cameraPermission": "Little Blooms cần quyền camera để bạn chụp ảnh ngay trong app khi log mood.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
