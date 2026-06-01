@@ -235,6 +235,17 @@
 
 ---
 
+## CI/CD [🟡 IN PROGRESS — workflow xong, chờ user set EXPO_TOKEN]
+> GitHub Actions: CI type-check mỗi push + CD auto-build APK qua EAS.
+
+- [x] `.github/workflows/ci.yml` — type-check (tsc) mỗi push/PR lên master. Dùng `npm ci --legacy-peer-deps`.
+- [x] `.github/workflows/build-apk.yml` — auto `eas build -p android --profile preview --no-wait` mỗi push master + chạy tay được (workflow_dispatch). Dùng expo/expo-github-action@v8.
+- [x] CI bỏ lint (eslint 10 cần flat config, project dùng .eslintrc cũ → fail giả). Chỉ chạy type-check.
+- [ ] **User**: tạo Expo access token (expo.dev → Account → Access tokens) + thêm vào GitHub repo Secrets tên `EXPO_TOKEN`
+- [ ] Verify workflow chạy xanh sau push
+
+---
+
 ## Google Login [❌ BỎ — 2026-05-31]
 > User quyết định bỏ Google login (không kịp config cho deadline). Giữ email/password (đã chạy ổn).
 > Gỡ sạch: nút Google + divider khỏi login.tsx, import thừa (WebBrowser/Linking) khỏi auth/api.ts.
