@@ -21,6 +21,14 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Verify EXPO_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN secret chưa được set. Vào repo Settings → Secrets and variables → Actions → New repository secret tên EXPO_TOKEN."
+            exit 1
+          fi
+          echo "EXPO_TOKEN đã được set ✓"
+
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -31,4 +39,6 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build Android APK (non-interactive)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --platform android --profile preview --non-interactive --no-wait
