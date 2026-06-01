@@ -1,5 +1,6 @@
 import { Tabs, Redirect } from 'expo-router';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsAuthenticated, useIsInitializing } from '@/features/auth/store';
 import { colors, shadows } from '@/lib/theme';
@@ -7,9 +8,13 @@ import { colors, shadows } from '@/lib/theme';
 export default function MainLayout() {
   const isAuthenticated = useIsAuthenticated();
   const isInitializing = useIsInitializing();
+  const insets = useSafeAreaInsets();
 
   if (isInitializing) return null;
   if (!isAuthenticated) return <Redirect href="/login" />;
+
+  // Chừa chỗ cho thanh điều hướng Android / home indicator iOS (tối thiểu 8px)
+  const bottomInset = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -22,9 +27,9 @@ export default function MainLayout() {
           borderTopWidth: 0,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          height: 64 + (Platform.OS === 'ios' ? 20 : 0),
+          height: 64 + bottomInset,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingBottom: bottomInset,
           ...shadows.lg,
         },
         tabBarLabelStyle: {
