@@ -68,7 +68,22 @@
       "Bash(npm --version)",
       "Bash(python -c \"import json; d=json.load\\(open\\('app.json'\\)\\); print\\('owner:', d['expo'].get\\('owner'\\)\\); print\\('extra:', d['expo'].get\\('extra'\\)\\); print\\('projectId:', d['expo'].get\\('extra',{}\\).get\\('eas',{}\\).get\\('projectId'\\)\\)\")",
       "Bash(node -e \"const d=require\\('./app.json'\\); console.log\\('owner:',d.expo.owner\\); console.log\\('extra:',JSON.stringify\\(d.expo.extra\\)\\); console.log\\('projectId:',d.expo.extra?.eas?.projectId\\)\")",
-      "Bash(echo \"=== EXIT: $? ===\")"
+      "Bash(echo \"=== EXIT: $? ===\")",
+      "Bash(npx expo *)",
+      "Bash(echo \"=== EXIT $? ===\")",
+      "Bash(echo \"=== tsc done, exit $? ===\")",
+      "Bash(npm ci *)",
+      "Bash(gh --version)",
+      "Bash(gh run *)",
+      "Bash(gh api *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"try{require.resolve\\('jimp'\\);console.log\\('jimp: CÓ'\\)}catch\\(e\\){console.log\\('jimp: KHÔNG'\\)}; try{require.resolve\\('@expo/image-utils'\\);console.log\\('expo-image-utils: CÓ'\\)}catch\\(e\\){console.log\\('expo-image-utils: KHÔNG'\\)}\")",
+      "Bash(node -e \"require\\('sharp'\\); console.log\\('sharp OK'\\)\")",
+      "Bash(export ECC_DISABLED_HOOKS=\"pre:edit-write:gateguard-fact-force,pre:bash:gateguard-fact-force\")",
+      "mcp__visualize__show_widget"
     ]
+  },
+  "env": {
+    "ECC_DISABLED_HOOKS": "pre:edit-write:gateguard-fact-force,pre:bash:gateguard-fact-force"
   }
 }

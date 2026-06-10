@@ -1,0 +1,47 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F19EC2"/><stop offset="1" stop-color="#E57BA8"/>
+    </linearGradient>
+    <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8FA8"/><stop offset="1" stop-color="#F0617F"/></linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg2)"/>
+
+  <text x="540" y="150" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="64" font-weight="800" fill="#FFFFFF">Ghi nhật ký mỗi ngày</text>
+  <text x="540" y="220" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="40" font-weight="600" fill="#FFE9F2">Cảm xúc, hoạt động, ảnh &amp; ghi chú</text>
+
+  <rect x="140" y="300" width="800" height="1480" rx="60" fill="#FFFFFF"/>
+
+  <!-- header -->
+  <text x="540" y="430" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="44" font-weight="800" fill="#7CB342">Sunday, May 31</text>
+
+  <!-- card mood lớn -->
+  <rect x="200" y="500" width="680" height="560" rx="40" fill="#FFF8E7"/>
+  <!-- tulip -->
+  <g transform="translate(540 700) scale(1.1)">
+    <path d="M -10 40 Q -14 130 -6 190 L 10 190 Q 16 120 10 40 Z" fill="#2E9E55"/>
+    <path d="M -4 110 Q -100 96 -120 160 Q -74 174 -6 140 Z" fill="#3DAE63"/>
+    <path d="M 6 128 Q 106 110 126 176 Q 78 188 8 152 Z" fill="#3DAE63"/>
+    <path d="M 0 36 Q -80 22 -72 -100 Q -42 -180 0 -150 Q 42 -180 72 -100 Q 80 22 0 36 Z" fill="url(#petal)"/>
+  </g>
+  <text x="540" y="960" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="52" font-weight="800" fill="#7CB342">Neutral</text>
+  <text x="540" y="1015" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="30" font-weight="500" fill="#9E9E9E">Ghi lúc 10:58 PM</text>
+
+  <!-- action card 1 -->
+  <rect x="200" y="1110" width="680" height="150" rx="30" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="2"/>
+  <circle cx="290" cy="1185" r="48" fill="#7CB342"/>
+  <path d="M 270 1185 L 285 1200 L 312 1170" stroke="#FFF" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="380" y="1175" font-family="Nunito,Segoe UI,sans-serif" font-size="38" font-weight="700" fill="#212121">Cập nhật nhật ký</text>
+  <text x="380" y="1220" font-family="Nunito,Segoe UI,sans-serif" font-size="28" font-weight="500" fill="#9E9E9E">Sửa cảm xúc, thẻ, ghi chú, ảnh</text>
+
+  <!-- action card 2 -->
+  <rect x="200" y="1290" width="680" height="150" rx="30" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="2"/>
+  <circle cx="290" cy="1365" r="48" fill="#FB8C00"/>
+  <path d="M 295 1340 L 278 1372 L 292 1372 L 285 1395 L 308 1358 L 294 1358 Z" fill="#FFF"/>
+  <text x="380" y="1355" font-family="Nunito,Segoe UI,sans-serif" font-size="38" font-weight="700" fill="#212121">Ghi nhanh</text>
+  <text x="380" y="1400" font-family="Nunito,Segoe UI,sans-serif" font-size="28" font-weight="500" fill="#9E9E9E">Khoảnh khắc cảm xúc ngay bây giờ</text>
+
+  <!-- tab bar -->
+  <rect x="160" y="1640" width="760" height="120" fill="#C7E7C2"/>
+  <circle cx="540" cy="1640" r="50" fill="#F19EC2" stroke="#FFFFFF" stroke-width="8"/>
+</svg>

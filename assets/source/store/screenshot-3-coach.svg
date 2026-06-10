@@ -1,0 +1,49 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7E57C2"/><stop offset="1" stop-color="#5E35B1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg3)"/>
+
+  <text x="540" y="150" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="64" font-weight="800" fill="#FFFFFF">Người bạn AI "Bloom"</text>
+  <text x="540" y="220" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="40" font-weight="600" fill="#EDE7F6">Lắng nghe &amp; gợi ý lối sống tích cực</text>
+
+  <rect x="140" y="300" width="800" height="1480" rx="60" fill="#FFFFFF"/>
+
+  <!-- header -->
+  <rect x="160" y="320" width="760" height="150" fill="#FFFFFF"/>
+  <text x="540" y="405" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="46" font-weight="800" fill="#7CB342">Bloom 🌿</text>
+  <text x="540" y="450" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="26" font-weight="500" fill="#9E9E9E">Người bạn đồng hành cảm xúc</text>
+  <line x1="160" y1="475" x2="920" y2="475" stroke="#E0E0E0" stroke-width="2"/>
+
+  <!-- bong bóng AI 1 -->
+  <rect x="200" y="540" width="560" height="220" rx="36" fill="#FFF8E7"/>
+  <text x="230" y="600" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">Chào bạn 🌱 Mình là Bloom.</text>
+  <text x="230" y="645" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">Hôm nay của bạn thế nào? Ăn</text>
+  <text x="230" y="690" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">uống đầy đủ chưa, có chuyện</text>
+  <text x="230" y="735" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">gì vui hay buồn không?</text>
+
+  <!-- bong bóng user -->
+  <rect x="500" y="800" width="320" height="90" rx="36" fill="#7CB342"/>
+  <text x="660" y="858" text-anchor="middle" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#FFFFFF">tôi hơi mệt hôm nay</text>
+
+  <!-- bong bóng AI 2 -->
+  <rect x="200" y="930" width="600" height="320" rx="36" fill="#FFF8E7"/>
+  <text x="230" y="990" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">Mình hiểu mà 💛 Ngày mệt thì</text>
+  <text x="230" y="1035" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">mình cho phép bản thân nghỉ</text>
+  <text x="230" y="1080" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">ngơi nhé. Thử uống một ly</text>
+  <text x="230" y="1125" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">nước ấm và đi ngủ sớm hơn</text>
+  <text x="230" y="1170" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">một chút. Tối nay bạn có dự</text>
+  <text x="230" y="1215" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#212121">định gì để thư giãn không? 🌙</text>
+
+  <!-- thanh nhập -->
+  <rect x="200" y="1380" width="500" height="90" rx="45" fill="#FFF8E7"/>
+  <text x="240" y="1438" font-family="Nunito,Segoe UI,sans-serif" font-size="30" fill="#9E9E9E">Nhắn cho Bloom…</text>
+  <circle cx="790" cy="1425" r="55" fill="#7CB342"/>
+  <path d="M 765 1425 L 815 1425 M 798 1408 L 815 1425 L 798 1442" stroke="#FFF" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- tab bar -->
+  <rect x="160" y="1640" width="760" height="120" fill="#C7E7C2"/>
+  <circle cx="540" cy="1640" r="50" fill="#F19EC2" stroke="#FFFFFF" stroke-width="8"/>
+</svg>
